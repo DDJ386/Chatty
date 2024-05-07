@@ -1,2 +1,3 @@
 ./client/scrpits
 ./client/src/*.o
+./client/.vscode

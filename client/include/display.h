@@ -10,13 +10,14 @@
     { printf("\033[%d;%dH", x, y); }
 #define saveCur() \
     { printf("\033[s"); }
-#define restorCur() \
+#define restoreCur() \
     { printf("\033[u"); }
 
 struct curPosition {
-    uint16_t col, row;
+    uint16_t  row,col;
 };
 
 void formatPrint(struct curPosition position, struct curPosition limit, char *format, ...);
 
+void clear(struct curPosition start, struct curPosition limit);
 #endif

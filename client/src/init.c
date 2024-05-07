@@ -3,6 +3,7 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "display.h"
 
@@ -22,14 +23,14 @@ char logo[] =
 
 static void printLogo() {
     int padding = (vPartLine - 34) / 2;
-    formatPrint((struct curPosition){padding, 0},
-                (struct curPosition){vPartLine - 1, hPartLine - 1},
+    formatPrint((struct curPosition){1, padding},
+                (struct curPosition){hPartLine - 1, vPartLine - 1},
                 "**********************************\n");
-    formatPrint((struct curPosition){padding, 2},
-                (struct curPosition){vPartLine - 1, hPartLine - 1},
-                "\033[5m        WELCOME TO CHATTY\033[0m\n");
-    formatPrint((struct curPosition){padding, 3},
-                (struct curPosition){vPartLine - 1, hPartLine - 1}, "\n%s\n", logo);
+    formatPrint((struct curPosition){2, padding},
+                (struct curPosition){hPartLine - 1, vPartLine - 1},
+                "\033[5m        WELCOME TO CHATTY\033[0m");
+    formatPrint((struct curPosition){3, padding},
+                (struct curPosition){hPartLine - 1, vPartLine - 1}, "\n%s\n", logo);
 }
 
 static void getScreenSzie(struct curPosition *screenSize) {
@@ -41,18 +42,35 @@ static void getScreenSzie(struct curPosition *screenSize) {
 
 static void printPartLine() {
     vPartLine = screenSize.col / 8 * 6;
-    hPartLine = screenSize.row / 8 * 6;
-    for (int i = 0; i <= screenSize.row; i++) {
+    hPartLine = screenSize.row / 8 * 7;
+    for (int i = 1; i < hPartLine; i++) {
         setCur(i, vPartLine);
         printf("|");
     }
-    for (int i = 0; i < vPartLine; i++) {
+    for (int i = 1; i <= screenSize.col; i++) {
         setCur(hPartLine, i);
-        printf("_");
+        printf("—");
     }
 }
 
-static void authenticateUser() {}
+void enroll() {
+    
+}
+
+void login() {
+    
+}
+
+static void authenticateUser() {
+    char cmd[8];
+    printf("\n\033[5m*\033[0mType \"enroll\" to register, \"login\" to login\n");
+    saveCur();
+    setCur(hPartLine + 1, 0);
+    scanf("%8s",cmd);
+    clear((struct curPosition){hPartLine + 1, 0}, (struct curPosition){screenSize.row, vPartLine - 1});
+    if(strcmp(cmd, "enroll")) enroll();
+    else if(strcmp(cmd, "login")) login();
+}
 
 void init() {
     clearScreen();

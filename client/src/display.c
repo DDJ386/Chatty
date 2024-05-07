@@ -16,16 +16,24 @@ void formatPrint(struct curPosition position, struct curPosition limit, char *fo
 
     int lineLen = limit.col - position.col;
     char *p = buffer;
-    int len = 0;
+    int len = 1;
     while (*p != '\0') {
         if (*p == '\n' || len > lineLen) {
             setCur(row++, col);
             len = 0;
-            if (row > limit.row) break;
+            if (row >= limit.row) break;
         } else {
             putchar(*p);
         }
         p++;
         len++;
     }
+}
+
+void clear(struct curPosition start, struct curPosition limit) {
+    saveCur();
+    int line = limit.row - start.row;
+    int colomn = limit.col - start.col;
+    formatPrint(start, limit, "%*s", line * colomn, " ");
+    restoreCur();
 }

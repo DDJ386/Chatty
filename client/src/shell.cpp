@@ -5,18 +5,14 @@ using namespace std;
 
 extern "C" void shell();
 
-extern "C"{
-    void login();
-    void enroll();
-    void help();
+extern "C" {
+void help();
 }
 
 typedef void (*pfunc)();
 
-map<string,pfunc> commands = {
+map<string, pfunc> commands = {
     {"help", help},
-    {"login",login},
-    {"register", enroll}
 };
 
 void shell() {

@@ -6,7 +6,8 @@
 #include"display.h"
 
 extern struct curPosition screenSize;
-extern uint16_t partLine;
+extern uint16_t vPartLine, hPartLine;
+extern void netInit();
 
 char logo[] = 
 "       _           _   _\n"         
@@ -19,7 +20,7 @@ char logo[] =
 "                           |___/\n";
 
 static void printLogo(){
-    int padding = (partLine - 34)/2;
+    int padding = (vPartLine - 34)/2;
     formatPrint((struct curPosition){padding,0}, "**********************************\n");
     formatPrint((struct curPosition){padding,2},"\033[5m        WELCOME TO CHATTY\033[0m\n");
     formatPrint((struct curPosition){padding,3},"\n%s\n",logo);
@@ -33,10 +34,15 @@ static void getScreenSzie(struct curPosition *screenSize) {
 }
 
 static void printPartLine() {
-    partLine = screenSize.col / 8 * 5;
+    vPartLine = screenSize.col / 8 * 6;
+    hPartLine = screenSize.row / 8 * 6;
     for(int i = 0; i <= screenSize.row; i++) {
-        setCur(i, partLine);
+        setCur(i, vPartLine);
         printf("|");
+    }
+    for(int i = 0; i < vPartLine; i++) {
+        setCur(hPartLine, i);
+        printf("_");
     }
 }
 
@@ -46,6 +52,8 @@ void init(){
     printPartLine();
     setCur(0,0);
     printLogo();
-    printf("\nthe client is initialized\n");
-    printf("\nconnecting to the service\n");
+    printf("\nthe client is initialized.\n");
+    printf("\nconnecting to the service.\n");
+    netInit();
+    printf("\nconnect success.\n");
 }

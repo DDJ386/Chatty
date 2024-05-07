@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "display.h"
-#include "formatPrint.h"
-extern void init();
+
+void init();
+// void shell();
 
 struct curPosition screenSize;
-uint16_t partLine;
+uint16_t vPartLine, hPartLine;
 int main() {
     init();
+    // shell();
 }

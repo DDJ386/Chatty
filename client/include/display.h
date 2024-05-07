@@ -6,10 +6,13 @@
 
 #define clearScreen() {printf("\033[2J");}
 #define setCur(x,y) {printf("\033[%d;%dH",x,y);}
+#define saveCur()   {printf("\033[s");}
+#define restorCur() {printf("\033[u");}
 
 struct curPosition{
     uint16_t col, row;
 };
+
 
 void formatPrint(struct curPosition, char *, ...);
 

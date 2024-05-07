@@ -1,7 +1,7 @@
 #include "display.h"
 #include <stdarg.h>
 
-void formatPrint(struct curPosition position, char *format, ...) {
+void formatPrint(struct curPosition position, int lineLen, char *format, ...) {
     uint16_t col = position.col;
     uint16_t row = position.row;
     char buffer[4096];
@@ -14,13 +14,16 @@ void formatPrint(struct curPosition position, char *format, ...) {
     setCur(row++, col);
 
     char *p = buffer;
+    int len = 0;
     while(*p != '\0') {
-        if(*p == '\n'){
+        if(*p == '\n' || len == lineLen){
             setCur(row++, col);
+            len = 0;
         }
         else{
             putchar(*p);
         }
         p++;
+        len++
     }
 }

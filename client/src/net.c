@@ -7,9 +7,9 @@
 #include <sys/types.h>
 
 #define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 8888
+#define SERVER_PORT 8848
 
-void netInit() {
+void connectServer() {
   int client_fd;
   struct sockaddr_in server_addr;
   // open the socket
@@ -25,7 +25,8 @@ void netInit() {
     exit(EXIT_FAILURE);
   }
   // connect the server
-  if (connect(client_fd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) < 0) {
+  if (connect(client_fd, (struct sockaddr *)&server_addr,
+              sizeof(struct sockaddr)) < 0) {
     perror("Connection failed");
     exit(EXIT_FAILURE);
   }

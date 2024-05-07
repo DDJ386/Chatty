@@ -7,7 +7,7 @@ extern "C" void shell();
 
 extern "C"{
     void login();
-    void signin();
+    void enroll();
     void help();
 }
 
@@ -16,7 +16,7 @@ typedef void (*pfunc)();
 map<string,pfunc> commands = {
     {"help", help},
     {"login",login},
-    {"signin", signin}
+    {"register", enroll}
 };
 
 void shell() {

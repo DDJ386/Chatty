@@ -1,11 +1,12 @@
 #include "display.h"
-extern int vPartLine;
 
-char manual[] = {
-  "login\n"
-  "signin\n"
-};
+char manual[] = "login\nsignin\n ";
 
-void help() {
-  formatPrint((struct curPosition){vPartLine, 0}, "%s", manual);
+extern  struct curPosition screenSize;
+extern uint16_t vPartLine, hPartLine;
+
+void help() { 
+  saveCur();
+  formatPrint((struct curPosition){vPartLine + 1, 1}, screenSize, "%s", manual); 
+  restorCur();
 }

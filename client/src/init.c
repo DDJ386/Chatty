@@ -21,9 +21,9 @@ char logo[] =
 
 static void printLogo(){
     int padding = (vPartLine - 34)/2;
-    formatPrint((struct curPosition){padding,0}, "**********************************\n");
-    formatPrint((struct curPosition){padding,2},"\033[5m        WELCOME TO CHATTY\033[0m\n");
-    formatPrint((struct curPosition){padding,3},"\n%s\n",logo);
+    formatPrint((struct curPosition){padding,0}, (struct curPosition){vPartLine - 1, hPartLine - 1}, "**********************************\n");
+    formatPrint((struct curPosition){padding,2}, (struct curPosition){vPartLine - 1, hPartLine - 1},"\033[5m        WELCOME TO CHATTY\033[0m\n");
+    formatPrint((struct curPosition){padding,3}, (struct curPosition){vPartLine - 1, hPartLine - 1},"\n%s\n",logo);
 }
 
 static void getScreenSzie(struct curPosition *screenSize) {
@@ -52,8 +52,4 @@ void init(){
     printPartLine();
     setCur(0,0);
     printLogo();
-    printf("\nthe client is initialized.\n");
-    printf("\nconnecting to the service.\n");
-    netInit();
-    printf("\nconnect success.\n");
 }

@@ -14,6 +14,6 @@ struct curPosition{
 };
 
 
-void formatPrint(struct curPosition, char *, ...);
+void formatPrint(struct curPosition position, struct curPosition limit, char *format, ...);
 
 #endif

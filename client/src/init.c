@@ -10,6 +10,10 @@
 extern struct curPosition screenSize;
 extern uint16_t vPartLine, hPartLine;
 extern void netInit();
+extern void enroll();
+extern void login();
+extern struct curPosition inputZoneStart, inputZoneEnd, displayZoneStart, displayZoneEnd,
+    informZoneStart, informZoneEnd;
 
 char logo[] =
     "       _           _   _\n"
@@ -53,22 +57,23 @@ static void printPartLine() {
     }
 }
 
-void enroll() {
-    
+static void zoneInit() {
+    inputZoneStart = (struct curPosition){hPartLine + 1, 1};
+    inputZoneEnd = screenSize;
+    displayZoneStart = (struct curPosition){1, 1};
+    displayZoneEnd = (struct curPosition){hPartLine - 1, vPartLine - 1};
+    informZoneStart = (struct curPosition){1, vPartLine + 1};
+    informZoneEnd = (struct curPosition){hPartLine - 1, screenSize.col};
 }
-
-void login() {}
 
 static void authenticateUser() {
     char cmd[8];
     printf("\n\033[5m*\033[0mType \"enroll\" to register, \"login\" to login\n");
-    saveCur();
-    setCur(hPartLine + 1, 1);
+    setCur(inputZoneStart.row, inputZoneStart.col);
     scanf("%8s", cmd);
-    clearInput();
-    if (strcmp(cmd, "enroll"))
+    if (strcmp(cmd, "enroll") == 0)
         enroll();
-    else if (strcmp(cmd, "login"))
+    else if (strcmp(cmd, "login") == 0)
         login();
 }
 
@@ -76,6 +81,7 @@ void init() {
     clearScreen();
     getScreenSzie(&screenSize);
     printPartLine();
+    zoneInit();
     setCur(0, 0);
     printLogo();
     authenticateUser();

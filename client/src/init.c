@@ -1,9 +1,9 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
-#include <string.h>
 
 #include "display.h"
 
@@ -23,14 +23,14 @@ char logo[] =
 
 static void printLogo() {
     int padding = (vPartLine - 34) / 2;
-    formatPrint((struct curPosition){1, padding},
-                (struct curPosition){hPartLine - 1, vPartLine - 1},
-                "**********************************\n");
-    formatPrint((struct curPosition){2, padding},
-                (struct curPosition){hPartLine - 1, vPartLine - 1},
-                "\033[5m        WELCOME TO CHATTY\033[0m");
-    formatPrint((struct curPosition){3, padding},
-                (struct curPosition){hPartLine - 1, vPartLine - 1}, "\n%s\n", logo);
+    positionPrint((struct curPosition){1, padding},
+                  (struct curPosition){hPartLine - 1, vPartLine - 1},
+                  "**********************************\n");
+    positionPrint((struct curPosition){2, padding},
+                  (struct curPosition){hPartLine - 1, vPartLine - 1},
+                  "\033[5m        WELCOME TO CHATTY\033[0m");
+    positionPrint((struct curPosition){3, padding},
+                  (struct curPosition){hPartLine - 1, vPartLine - 1}, "\n%s\n", logo);
 }
 
 static void getScreenSzie(struct curPosition *screenSize) {
@@ -57,19 +57,19 @@ void enroll() {
     
 }
 
-void login() {
-    
-}
+void login() {}
 
 static void authenticateUser() {
     char cmd[8];
     printf("\n\033[5m*\033[0mType \"enroll\" to register, \"login\" to login\n");
     saveCur();
-    setCur(hPartLine + 1, 0);
-    scanf("%8s",cmd);
-    clear((struct curPosition){hPartLine + 1, 0}, (struct curPosition){screenSize.row, vPartLine - 1});
-    if(strcmp(cmd, "enroll")) enroll();
-    else if(strcmp(cmd, "login")) login();
+    setCur(hPartLine + 1, 1);
+    scanf("%8s", cmd);
+    clearInput();
+    if (strcmp(cmd, "enroll"))
+        enroll();
+    else if (strcmp(cmd, "login"))
+        login();
 }
 
 void init() {

@@ -1,8 +1,8 @@
-#include <stdarg.h>
-
 #include "display.h"
 
-void formatPrint(struct curPosition position, struct curPosition limit, char *format, ...) {
+#include <stdarg.h>
+
+void positionPrint(struct curPosition position, struct curPosition limit, char *format, ...) {
     uint16_t col = position.col;
     uint16_t row = position.row;
     char buffer[4096];
@@ -34,6 +34,13 @@ void clear(struct curPosition start, struct curPosition limit) {
     saveCur();
     int line = limit.row - start.row;
     int colomn = limit.col - start.col;
-    formatPrint(start, limit, "%*s", line * colomn, " ");
+    positionPrint(start, limit, "%*s", line * colomn, " ");
     restoreCur();
+}
+
+extern uint16_t hPartLine;
+extern struct curPosition screenSize;
+void clearInput() {
+    clear((struct curPosition){hPartLine + 1, 1}, screenSize);
+    setCur(hPartLine + 1, 1);
 }

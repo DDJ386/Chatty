@@ -1,3 +1,6 @@
+#include "net.h"
+#include "protocol.h"
+
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -5,12 +8,14 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8848
 
+static int client_fd;
+
 void connectServer() {
-    int client_fd;
     struct sockaddr_in server_addr;
     // open the socket
     if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -29,4 +34,13 @@ void connectServer() {
         perror("Connection failed");
         exit(EXIT_FAILURE);
     }
+}
+
+void sendMessage(struct package *message) {
+    size_t len = message->length + HEADER_LEN;
+    send(client_fd, (void*)message, len, 0)
+}
+
+void receveMessage(void *buffer){
+    read(client_fd, buffer, PACKAGE_SIZE);
 }

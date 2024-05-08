@@ -1,6 +1,7 @@
 #include "display.h"
 
 #include <stdarg.h>
+#include <stdio.h>
 
 void positionPrint(struct curPosition position, struct curPosition limit, char *format, ...) {
     uint16_t col = position.col;
@@ -38,9 +39,8 @@ void clear(struct curPosition start, struct curPosition limit) {
     restoreCur();
 }
 
-extern uint16_t hPartLine;
-extern struct curPosition screenSize;
+extern struct curPosition inputZoneStart, inputZoneEnd;
 void clearInput() {
-    clear((struct curPosition){hPartLine + 1, 1}, screenSize);
-    setCur(hPartLine + 1, 1);
+    clear(inputZoneStart, inputZoneEnd);
+    setCur(inputZoneStart.row, inputZoneStart.col);
 }

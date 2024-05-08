@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <stdio.h>
 
 #ifndef _DISPLAY_H
 #define _DISPLAY_H 1
@@ -9,9 +8,9 @@
 #define setCur(line, column) \
     { printf("\033[%d;%dH", line, column); }
 #define saveCur() \
-    { printf("\033[s"); }
+    { printf("\0337"); }
 #define restoreCur() \
-    { printf("\033[u"); }
+    { printf("\0338"); }
 
 #ifdef __cplusplus
 extern "C" {

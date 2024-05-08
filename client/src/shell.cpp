@@ -1,6 +1,8 @@
 #include <iostream>
 #include <map>
 #include <string>
+
+#include "display.h"
 using namespace std;
 
 extern "C" void shell();
@@ -19,6 +21,9 @@ void shell() {
     while (1) {
         string cmd;
         cin >> cmd;
-        (commands[cmd])();
+        clearInput();
+        pfunc pf = commands[cmd];
+        if(pf != NULL) pf();
+        else cout<<cmd<<" is not a command\n";
     }
 }

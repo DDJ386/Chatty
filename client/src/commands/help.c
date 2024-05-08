@@ -7,7 +7,7 @@ extern uint16_t vPartLine, hPartLine;
 
 void help() {
     saveCur();
-    formatPrint((struct curPosition){1, vPartLine + 1},
-                (struct curPosition){hPartLine - 1, screenSize.col}, "%s", manual);
+    positionPrint((struct curPosition){1, vPartLine + 1},
+                  (struct curPosition){hPartLine - 1, screenSize.col}, "%s", manual);
     restoreCur();
 }

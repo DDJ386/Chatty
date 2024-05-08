@@ -1,5 +1,4 @@
 #include "net.h"
-#include "protocol.h"
 
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -9,6 +8,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "protocol.h"
 
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8848
@@ -38,9 +39,9 @@ void connectServer() {
 
 void sendMessage(struct package *message) {
     size_t len = message->length + HEADER_LEN;
-    send(client_fd, (void*)message, len, 0)
+    send(client_fd, (void *)message, len, 0);
 }
 
-void receveMessage(void *buffer){
-    read(client_fd, buffer, PACKAGE_SIZE);
-}
+void receveMessage(void *buffer) { read(client_fd, buffer, PACKAGE_SIZE); }
+
+void closeConnect() { close(client_fd); }

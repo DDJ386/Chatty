@@ -7,3 +7,4 @@ client/CMakeCache.txt
 client/Makefile
 .vscode
 client/main
+client/user

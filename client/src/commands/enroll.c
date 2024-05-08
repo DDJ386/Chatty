@@ -2,6 +2,7 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "display.h"
 #include "net.h"
@@ -41,19 +42,20 @@ again:
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 
     // send message to server
+    connectServer();
     struct package message;
     snprintf(message.data, sizeof(message.data), "%s%s", username, password1);
     message.method = REGIS;
     message.length = strlen(message.data);
-    sendMessage((void *)&message);
+    sendMessage(&message);
 
     // receive message
     receveMessage((void *)&message);
-    if(strcmp(message.data, "success")) {
-      perror("register faild\n");
-      exit(-1);
+    if (message.method != REPLY || strcmp(message.data, "success")) {
+        perror("register faild\n");
+        exit(-1);
     }
-    
+
     // register success
     clearInput();
     printf("register success, press any key to login");

@@ -1,7 +1,8 @@
-#include <stdint.h>
-
 #ifndef _DISPLAY_H
 #define _DISPLAY_H 1
+
+#include <stdint.h>
+#include <stdio.h>
 
 #define clearScreen() \
     { printf("\033[2J"); }
@@ -20,7 +21,7 @@ struct curPosition {
     uint16_t row, col;
 };
 
-void positionPrint(struct curPosition position, struct curPosition limit, char *format, ...);
+void positionPrint(struct curPosition position, struct curPosition limit, const char *format, ...);
 
 void clear(struct curPosition start, struct curPosition limit);
 

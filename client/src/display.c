@@ -2,8 +2,12 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <pthread.h>
 
-void positionPrint(struct curPosition position, struct curPosition limit, char *format, ...) {
+static pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER; 
+
+void positionPrint(struct curPosition position, struct curPosition limit,const char *format, ...) {
+    
     uint16_t col = position.col;
     uint16_t row = position.row;
     char buffer[4096];
@@ -13,6 +17,9 @@ void positionPrint(struct curPosition position, struct curPosition limit, char *
     vsprintf(buffer, format, arglist);
     va_end(arglist);
 
+    pthread_mutex_lock(&printLock);
+    saveCur();
+    /* now print data into screen */
     setCur(row++, col);
 
     int lineLen = limit.col - position.col;
@@ -29,14 +36,15 @@ void positionPrint(struct curPosition position, struct curPosition limit, char *
         p++;
         len++;
     }
+    restoreCur();
+    pthread_mutex_unlock(&printLock);
+    fflush(stdout);
 }
 
 void clear(struct curPosition start, struct curPosition limit) {
-    saveCur();
     int line = limit.row - start.row;
     int colomn = limit.col - start.col;
     positionPrint(start, limit, "%*s", line * colomn, " ");
-    restoreCur();
 }
 
 extern struct curPosition inputZoneStart, inputZoneEnd;

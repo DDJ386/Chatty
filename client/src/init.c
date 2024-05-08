@@ -14,6 +14,7 @@ extern void enroll();
 extern void login();
 extern struct curPosition inputZoneStart, inputZoneEnd, displayZoneStart, displayZoneEnd,
     informZoneStart, informZoneEnd;
+extern char currentUser[32];
 
 char logo[] =
     "       _           _   _\n"
@@ -27,13 +28,13 @@ char logo[] =
 
 static void printLogo() {
     int padding = (vPartLine - 34) / 2;
-    positionPrint((struct curPosition){1, padding},
+    positionPrint((struct curPosition){5, padding},
                   (struct curPosition){hPartLine - 1, vPartLine - 1},
                   "**********************************\n");
-    positionPrint((struct curPosition){2, padding},
+    positionPrint((struct curPosition){6, padding},
                   (struct curPosition){hPartLine - 1, vPartLine - 1},
                   "\033[5m        WELCOME TO CHATTY\033[0m");
-    positionPrint((struct curPosition){3, padding},
+    positionPrint((struct curPosition){7, padding},
                   (struct curPosition){hPartLine - 1, vPartLine - 1}, "\n%s\n", logo);
 }
 
@@ -68,13 +69,20 @@ static void zoneInit() {
 
 static void authenticateUser() {
     char cmd[8];
-    printf("\n\033[5m*\033[0mType \"enroll\" to register, \"login\" to login\n");
-    setCur(inputZoneStart.row, inputZoneStart.col);
+    clearInput();
+    printf("\033[5m*\033[0mType \"enroll\" to register, \"login\" to login\n");
+again:
     scanf("%8s", cmd);
     if (strcmp(cmd, "enroll") == 0)
         enroll();
     else if (strcmp(cmd, "login") == 0)
         login();
+    else {
+        clearInput();
+        printf("\033[5m*\033[0mType \"enroll\" to register, \"login\" to login\n");
+        printf("%s is not a correct command\n", cmd);
+        goto again;
+    }
 }
 
 void init() {

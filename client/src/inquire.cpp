@@ -64,7 +64,7 @@ void *inquire(void *pvoid) {
         /* test data */
         message.method = REPLY;
         message.length = 1;
-        snprintf(message.data, 4096, "%s %d %s %s %s %d %s", "alex", 2, "msg1", "msg2", "bob", 1,
+        snprintf(message.data, 4096, "%s %d %s %s %s %d %s", "alex", 2, "msg5", "msg6", "bob", 1,
                  "msg3");
         /* test data end*/
 

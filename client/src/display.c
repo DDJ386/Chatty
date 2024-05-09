@@ -29,7 +29,7 @@ void positionPrint(struct curPosition position, struct curPosition limit,const c
         if (*p == '\n' || len > lineLen) {
             setCur(row++, col);
             len = 0;
-            if (row >= limit.row) break;
+            if (row > limit.row) break;
         } else {
             putchar(*p);
         }

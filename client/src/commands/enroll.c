@@ -44,7 +44,7 @@ again:
     // send message to server
     connectServer();
     struct package message;
-    snprintf(message.data, sizeof(message.data), "%s%s", username, password1);
+    snprintf(message.data, sizeof(message.data), "%s %s", username, password1);
     message.method = REGIS;
     message.length = strlen(message.data);
     sendMessage(&message);
@@ -55,6 +55,8 @@ again:
         perror("register faild\n");
         exit(-1);
     }
+
+    closeConnect();
 
     // register success
     clearInput();

@@ -93,4 +93,5 @@ void init() {
     setCur(0, 0);
     printLogo();
     authenticateUser();
+    clearInput();
 }

@@ -10,13 +10,15 @@ extern "C" void shell();
 extern "C" {
 void help();
 void touch();
+void sendMsg();
 }
 
 typedef void (*pfunc)();
 
 map<string, pfunc> commands = {
     {"help", help},
-    {"touch", touch}
+    {"touch", touch},
+    {"sdmsg", sendMsg}
 };
 
 void shell() {

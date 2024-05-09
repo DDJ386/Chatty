@@ -20,7 +20,7 @@ void sendMsg() {
         positionPrint(inputZoneStart, inputZoneEnd, "please touch who you wangt to talk first\n");
         return;
     }
-    scanf(" %[^\n%*c]", message);
+    scanf(" %[^\n]%*c", message);
 
     // send message to server
 

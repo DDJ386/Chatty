@@ -1,0 +1,9 @@
+client/scripts
+client/src/*.o
+client/.vscode/
+client/CMakeFiles
+client/cmake_install.cmake
+client/CMakeCache.txt
+client/Makefile
+.vscode
+client/main

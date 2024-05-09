@@ -38,7 +38,7 @@ void connectServer() {
 
 void sendMessage(struct package *message) {
     size_t len = message->length + HEADER_LEN;
-    send(client_fd, (void*)message, len, 0)
+    send(client_fd, (void*)message, len, 0);
 }
 
 void receveMessage(void *buffer){

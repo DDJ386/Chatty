@@ -65,7 +65,7 @@ void printLog() {
     }
 }
 
-void printInform() {
+static void printInform() {
     clear(informZoneStart, informZoneEnd);
     struct curPosition start = informZoneStart;
 

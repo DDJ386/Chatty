@@ -33,7 +33,7 @@ void printHeadline() {
 
 void printLog() {
     uint16_t linePerMsg = (uint16_t)128 / (displayZoneEnd.col - displayZoneStart.col) + 2;
-    uint16_t maxNum = (displayZoneEnd.row - displayZoneStart.row) / linePerMsg;
+    uint16_t maxNum = (displayZoneEnd.row - displayZoneStart.row + 1) / linePerMsg;
     string filename = getenv("HOME");
     filename += "/Chatty/client/user/";
     filename += (const char*)currentUser;
@@ -44,7 +44,7 @@ void printLog() {
     string line;
     while (getline(file, line)) {
         toDisplay.push(line);
-        if (toDisplay.size() >= maxNum) {
+        if (toDisplay.size() > maxNum) {
             toDisplay.pop();
         }
     }
@@ -101,6 +101,6 @@ void* fresh(void* pvoid) {
         clear(displayZoneStart, displayZoneEnd);
         printHeadline();
         printLog();
-        sleep(1);
+        usleep(10000);
     }
 }

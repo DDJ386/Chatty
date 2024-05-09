@@ -22,7 +22,7 @@ void positionPrint(struct curPosition position, struct curPosition limit,const c
     /* now print data into screen */
     setCur(row++, col);
 
-    int lineLen = limit.col - position.col;
+    int lineLen = limit.col - position.col + 1;
     char *p = buffer;
     int len = 1;
     while (*p != '\0') {

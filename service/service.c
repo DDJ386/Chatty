@@ -25,6 +25,27 @@ typedef struct
 
 User hashtable[USER_SIZE];
 
+/*
+
+这里不需要hashtable
+服务器端希望接收到的数据是这样的
+snprintf(message.data, 4096, "%s %d %s %s %s %d %s ", "alexn", 2, "msg5", "msg6", "bob", 1, "msg3");
+你可以采取以下方式: 
+为每个发送过来信息的用户维护一个目录
+例如alex向bob发送了一条信息"message1"
+你可以存放在以下文件中:".../Chatty/service/alex/bob"
+FILE *fd;
+fd = fopen(filename, "a");
+fprintf(fd, "%s", msg);
+同理alex向tom发送了一条信息"message2"
+存放在:".../Chatty/service/alex/tom"
+
+当alex发送询问报文时, 服务方检测alex目录是否有文件, 若有则遍历每一个文件(opendir, readdir)
+并组织一个上面所示格式的数据包
+若没有消息, 返回一个length = 0 的 REPLY 包
+
+*/
+
 int hash(char* user)
 {
     int sum=0,N=997;
@@ -148,6 +169,13 @@ int main()
         perror("fail to connection");
         return -1;
     }
+
+    /* 
+    
+    从这里开始另开一个进程或者线程, 把ClientSocket传给新线程(进程),
+    你现在这种写法只能支持一个用户和服务器进行链接
+
+    */
     //connected
     while(1)
     {
@@ -164,6 +192,14 @@ int main()
             close(ClientSocket);
             continue;
         }
+
+        /*
+        
+        下面这块用switch case
+        
+        */
+
+
         if(meth==REGIS)
         {
             if(Regis(data)==-1)

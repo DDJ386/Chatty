@@ -65,7 +65,7 @@ void printLog() {
     }
 }
 
-void printInfrm() {
+void printInform() {
     clear(informZoneStart, informZoneEnd);
     struct curPosition start = informZoneStart;
 
@@ -82,7 +82,7 @@ void* fresh(void* pvoid) {
     (void)pvoid;
 
     while (1) {
-        printInfrm();
+        printInform();
         if (strcmp(currentChat, "") == 0) {
             sleep(1);
             continue;

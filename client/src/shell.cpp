@@ -9,12 +9,16 @@ extern "C" void shell();
 
 extern "C" {
 void help();
+void touch();
+void sendMsg();
 }
 
 typedef void (*pfunc)();
 
 map<string, pfunc> commands = {
     {"help", help},
+    {"touch", touch},
+    {"sdmsg", sendMsg}
 };
 
 void shell() {
@@ -23,7 +27,9 @@ void shell() {
         cin >> cmd;
         clearInput();
         pfunc pf = commands[cmd];
-        if(pf != NULL) pf();
-        else cout<<cmd<<" is not a command\n";
+        if (pf != NULL)
+            pf();
+        else
+            cout << cmd << " is not a command\n";
     }
 }

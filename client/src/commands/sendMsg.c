@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "display.h"
+#include "net.h"
 
 extern char currentUser[32];
 extern char currentChat[32];
@@ -23,6 +24,10 @@ void sendMsg() {
     scanf(" %[^\n]%*c", message);
 
     // send message to server
+    struct package package;
+    package.method = SDMSG;
+    sprintf(package.data,"%s %s", currentChat, message);
+    sendMessage(&package);
 
     // print to history
     snprintf(filename, 256, "%s/Chatty/client/user/%s/record/%s", getenv("HOME"), currentUser,

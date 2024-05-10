@@ -3,8 +3,10 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -15,6 +17,8 @@
 #define SERVER_PORT 8848
 
 static int client_fd;
+
+static pthread_mutex_t netlock = PTHREAD_MUTEX_INITIALIZER;
 
 void connectServer() {
     struct sockaddr_in server_addr;
@@ -37,11 +41,21 @@ void connectServer() {
     }
 }
 
+void netLock() { pthread_mutex_lock(&netlock); }
+void netUnlock() { pthread_mutex_unlock(&netlock); }
+
 void sendMessage(struct package *message) {
     size_t len = message->length + HEADER_LEN;
     send(client_fd, (void*)message, len, 0);
 }
 
-void receveMessage(void *buffer) { read(client_fd, buffer, PACKAGE_SIZE); }
+void receveMessage(void *buffer) {
+    memset(buffer, 0, 4096);
+    char buf[4096];
+    while (read(client_fd, buf, PACKAGE_SIZE) > 0) {
+        strcat(buffer, buf);
+        memset(buf, 0, sizeof(buf));
+    }
+}
 
 void closeConnect() { close(client_fd); }

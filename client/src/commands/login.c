@@ -50,6 +50,8 @@ void login() {
     char *homeDir = getenv("HOME");
     snprintf(cmd, 256, "mkdir -p %s/Chatty/client/user/%s/record", homeDir, username);
     system(cmd);
+    snprintf(cmd, 256, "mkdir  %s/Chatty/client/user/%s/file", homeDir, username);
+    system(cmd);
 
     memcpy(currentUser, username, 32);
     clearInput();

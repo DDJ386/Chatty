@@ -5,6 +5,8 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <netinet/in.h>
 
 #include "protocol.h"
 
@@ -15,6 +17,7 @@
 
 int ServerSocket,ClientSocket;
 int registed[USER_SIZE];
+char CurrentUser[50];
 
 
 typedef struct 
@@ -73,15 +76,14 @@ int Regis(uint8_t *data)
 int LoginCheck(u_int8_t *data)
 {
     int i=0,id;
-    char username[50]="";
     char password[50]="";
     while(data[i]!='\0')
     {
-        strcat(username,data[i]);
+        strcat(CurrentUser,data[i]);
         i++;
     }
     i++;
-    username[i]='\0';
+    CurrentUser[i]='\0';
     while(data[i]!='\0')
     {
         strcat(password,data[i]);
@@ -89,7 +91,7 @@ int LoginCheck(u_int8_t *data)
     }
     i++;
     password[i]='\0';
-    id=hash(username);
+    id=hash(CurrentUser);
     if(strcmp(usertable[id].password,password)!=0)
     {
         return -1;
@@ -111,16 +113,9 @@ int ReplytoClient(struct package *packet)
 int SendMessage(uint8_t *data)
 {
     int i=0;
-    char* sender;
     char* receiver;
     char* filename;
     char* message;
-    while(data[i]!=' ')
-    {
-        strcat(sender,data[i]);
-        i++;
-    }
-    i++;
     while(data[i]!=' ')
     {
         strcat(receiver,data[i]);
@@ -132,13 +127,9 @@ int SendMessage(uint8_t *data)
         strcat(message,data[i]);
         i++;
     }
-    if(registed[hash(sender)]==0||registed[hash(receiver)]==0)
+    if(registed[hash(receiver)]==0)
     {
         return 404;
-    }
-    else if(usertable[hash(sender)].state!=1)
-    {
-        return 405;
     }
     else
     {    
@@ -155,49 +146,41 @@ int SendMessage(uint8_t *data)
     }
 }
 
-
-int main()
+int SendFile(uint8_t *data)
 {
-    struct sockaddr_in server_addr, client_addr;
-    socklen_t client_addr_len = sizeof(client_addr);
+    int i=0;
+    char* sender;
+    char* receiver;
+    char* filename;
+    char* file;
+    while(data[i]!=' ')
+    {
+        strcat(sender,data[i]);
+        i++;
+    }
+    i++;
+    while(data[i]!=' ')
+    {
+        strcat(receiver,data[i]);
+        i++;
+    }
+    i++;
+    while(data[i]!=' ')
+    {
+        strcat(file,data[i]);
+        i++;
+    }
+}
+
+void* HandleClient(void* arg,u_int16_t method)
+{
+    int ClientSocket = *(int *)arg;
+    free(arg);
     struct package buffer,reply;
     int rcv=-1;
     u_int16_t meth,len;
     u_int8_t data[4096];
-    memset(registed,0,sizeof(registed));
-    
-
-    ServerSocket=socket(AF_INET,SOCK_STREAM,0);
-    if (ServerSocket == -1) {
-        perror("Failed to create socket");
-        return -1;
-    }
-
-    server_addr.sin_family=AF_INET;
-    server_addr.sin_port=htons(PORT);
-    server_addr.sin_addr.s_addr=htonl(INADDR_ANY);
-
-    if(bind(ServerSocket,(struct sockaddr *)&server_addr,sizeof(server_addr))==-1)
-    {
-        perror("Failed to bind on port");
-        return -1;
-    }
-
-    if(listen(ServerSocket,BACKLOG)==-1)
-    {
-        perror("Failed to listen");
-        return -1;
-    }
-    ClientSocket=accept(ServerSocket,(struct sockaddr *)&client_addr,&client_addr_len);
-    if(ClientSocket==-1)
-    {
-        perror("fail to connection");
-        return -1;
-    }
-    //connected
-    while(1)
-    {
-        memset((void*)&buffer,0,sizeof(buffer));
+    memset((void*)&buffer,0,sizeof(buffer));
         memset((void*)&reply,0,sizeof(reply));
         reply.method=REPLY;
         rcv=recv(ClientSocket,(void*)&buffer,sizeof(buffer),0);
@@ -208,7 +191,7 @@ int main()
         {
             printf("failed to receive package!");
             close(ClientSocket);
-            continue;
+            return NULL;
         }
         switch(meth)
         {
@@ -257,6 +240,7 @@ int main()
             }
             case SDFLE:
             {
+                
                 SendFile();
             }
             case INQRY:
@@ -268,6 +252,52 @@ int main()
                 break;
             }
         }
+}
 
+
+int main()
+{
+    struct sockaddr_in server_addr, client_addr;
+    socklen_t client_addr_len = sizeof(client_addr);
+    
+    memset(registed,0,sizeof(registed));
+    
+
+    ServerSocket=socket(AF_INET,SOCK_STREAM,0);
+    if (ServerSocket == -1) {
+        perror("Failed to create socket");
+        return -1;
+    }
+
+    server_addr.sin_family=AF_INET;
+    server_addr.sin_port=htons(PORT);
+    server_addr.sin_addr.s_addr=htonl(INADDR_ANY);
+
+    if(bind(ServerSocket,(struct sockaddr *)&server_addr,sizeof(server_addr))==-1)
+    {
+        perror("Failed to bind on port");
+        return -1;
+    }
+
+    if(listen(ServerSocket,BACKLOG)==-1)
+    {
+        perror("Failed to listen");
+        return -1;
+    }
+    
+    //connected
+    while(1)
+    {
+        ClientSocket=accept(ServerSocket,(struct sockaddr *)&client_addr,&client_addr_len);
+        if(ClientSocket==-1)
+        {
+            perror("fail to connection");
+            continue;
+        }
+        pthread_t thread;
+        if(pthread_create(&thread, NULL, HandleClient, ClientSocket) != 0) {
+            perror("Failed to create thread");
+            close(ClientSocket);
+        }
     }
 }

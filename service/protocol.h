@@ -8,6 +8,7 @@
 #define SDFLE 4
 #define FOLLW 5
 #define REPLY 6
+#define INQRY 7
 
 #define HEADER_LEN 32
 #define PACKAGE_SIZE 4096

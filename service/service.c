@@ -5,6 +5,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+
 #include "protocol.h"
 
 
@@ -13,6 +14,8 @@
 #define BACKLOG 1024
 
 int ServerSocket,ClientSocket;
+int registed[USER_SIZE];
+
 
 typedef struct 
 {
@@ -21,7 +24,7 @@ typedef struct
     int state;
 }User;
 
-User hashtable[USER_SIZE];
+User usertable[USER_SIZE];
 
 int hash(char* user)
 {
@@ -36,8 +39,6 @@ int hash(char* user)
 int Regis(uint8_t *data)
 {
     int i=0,sum;
-    int registed[USER_SIZE];
-    memset(registed,0,sizeof(registed));
     char username[50]="";
     char password[50]="";
     while(data[i]!='\0')
@@ -61,9 +62,9 @@ int Regis(uint8_t *data)
     }
     else
     {
-        strcpy(hashtable[sum].username,username);
-        strcpy(hashtable[sum].password,password);
-        hashtable[sum].state=0;
+        strcpy(usertable[sum].username,username);
+        strcpy(usertable[sum].password,password);
+        usertable[sum].state=0;
         registed[sum]=1;
         return 1;
     }
@@ -89,13 +90,13 @@ int LoginCheck(u_int8_t *data)
     i++;
     password[i]='\0';
     id=hash(username);
-    if(strcmp(hashtable[id].password,password)!=0)
+    if(strcmp(usertable[id].password,password)!=0)
     {
         return -1;
     }
     else
     {
-        hashtable[id].state=1;
+        usertable[id].state=1;
         return 1;
     }
 }
@@ -107,6 +108,52 @@ int ReplytoClient(struct package *packet)
     return 0;
 }
 
+int SendMessage(uint8_t *data)
+{
+    int i=0;
+    char* sender;
+    char* receiver;
+    char* filename;
+    char* message;
+    while(data[i]!=' ')
+    {
+        strcat(sender,data[i]);
+        i++;
+    }
+    i++;
+    while(data[i]!=' ')
+    {
+        strcat(receiver,data[i]);
+        i++;
+    }
+    i++;
+    while(data[i]!=' ')
+    {
+        strcat(message,data[i]);
+        i++;
+    }
+    if(registed[hash(sender)]==0||registed[hash(receiver)]==0)
+    {
+        return 404;
+    }
+    else if(usertable[hash(sender)].state!=1)
+    {
+        return 405;
+    }
+    else
+    {    
+        FILE *fd;
+        snprintf(filename, 256, "%s/Chatty/service/%s/%s", getenv("HOME"), receiver,sender);
+        //filename=getenv("HOME");
+        //filename+="/Chatty/service/";
+        //filename+=receiver;
+        //filename+="/";
+        //filename+=sender;
+        fd=fopen(filename,'a');
+        fprintf(fd, "%s", message);
+        return 1;
+    }
+}
 
 
 int main()
@@ -117,6 +164,7 @@ int main()
     int rcv=-1;
     u_int16_t meth,len;
     u_int8_t data[4096];
+    memset(registed,0,sizeof(registed));
     
 
     ServerSocket=socket(AF_INET,SOCK_STREAM,0);
@@ -162,33 +210,64 @@ int main()
             close(ClientSocket);
             continue;
         }
-        if(meth==REGIS)
+        switch(meth)
         {
-            if(Regis(data)==-1)
+            case REGIS:
             {
-                strcpy(reply.data,"failed");
+                if(Regis(data) == -1)
+                {
+                    strcpy(reply.data, "failed");
+                }
+                else
+                {
+                    strcpy(reply.data, "success");
+                }
+                ReplytoClient((void*)&reply);
+                break;
             }
-            else
+            case LOGIN:
             {
-                strcpy(reply.data,"success");
+                if(LoginCheck(data) == -1)
+                {
+                    strcpy(reply.data, "password incorrect!");
+                }
+                else
+                {
+                    strcpy(reply.data, "success");
+                }
+                ReplytoClient((void*)&reply);
+                break;
             }
-            ReplytoClient((void*)&reply);
+            case SDMSG:
+            {
+                if(SendMessage(data)==404)
+                {
+                    strcpy(reply.data, "sender or receiver not found");
+                }
+                else if(SendMessage(data)==405)
+                {
+                    strcpy(reply.data, "please login first!");
+                }
+                else
+                {
+                    strcpy(reply.data, "success");
+                }
+                ReplytoClient((void*)&reply);
+                break;
+            }
+            case SDFLE:
+            {
+                SendFile();
+            }
+            case INQRY:
+            {
+
+            }
+            default:
+            {
+                break;
+            }
         }
-        else if(meth==LOGIN)
-        {
-            if(LoginCheck(data)==-1)
-            {
-                strcpy(reply.data,"password incorrect!");
-            }
-            else
-            {
-                strcpy(reply.data,"success");
-            }
-            ReplytoClient((void*)&reply);
-        }
-        else if(meth==SDMSG)
-        {
-            SendMessage(data);
-        }
+
     }
 }

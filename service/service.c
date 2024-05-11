@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <netinet/in.h>
+#include <dirent.h>
+
 
 #include "protocol.h"
 
@@ -76,6 +78,7 @@ int Regis(uint8_t *data)
     sprintf(cmd,"mkdir %s/Chatty/service/%s/%s",getenv("HOME"), username,"MessageBox");
     system(cmd);
     sprintf(cmd,"mkdir %s/Chatty/service/%s/%s",getenv("HOME"), username,"FileBox");
+    system(cmd);
     return 1;
     //sum=hash(username);
 }
@@ -149,29 +152,43 @@ int SendMessage(uint8_t *data,char* CurrentUser)
     FILE *fd;
     snprintf(filename, 256, "%s/Chatty/service/%s", "user");
     fd=fopen(filename,'r+');
+    char checkUser[32];
+    char checkPwd[32];
+    int exist=0;
     if(strcmp(CurrentUser,"")==0)
     {
         return -1;
     }
-    while()
-    snprintf(filename, 256, "%s/Chatty/service/%s/%s/%s", getenv("HOME"), receiver,"MessageBox",CurrentUser);
-        //filename=getenv("HOME");
-        //filename+="/Chatty/service/";
-        //filename+=receiver;
-        //filename+="/";
-        //filename+=sender;
-    fd=fopen(filename,'a');
-    fprintf(fd, "%s\n", message);
-    return 1;
+    while(fscanf(fd,"%s %s",checkUser,checkPwd)!=EOF)
+    {
+        if(strcmp(receiver,checkUser)==0)
+        {
+            exist=1;
+            break;
+        }
+    }
+    if(exist)
+    {    
+        snprintf(filename, 256, "%s/Chatty/service/%s/%s/%s", getenv("HOME"), receiver,"MessageBox",CurrentUser);
+            //filename=getenv("HOME");
+            //filename+="/Chatty/service/";
+            //filename+=receiver;
+            //filename+="/";
+            //filename+=sender;
+        fd=fopen(filename,'a');
+        fprintf(fd, "%s\n", message);
+        return 1;
+    }
+    else return -1;
 }
 
 int SendFile(uint8_t *data,int is_first)
 {
     int i=0;
     uint16_t pkg_num;
-    char* receiver;
-    char* filename;
-    char* file;
+    char receiver[50];
+    char filename[50];
+    char file[4064];
     if(is_first)
     {
         
@@ -190,6 +207,31 @@ int SendFile(uint8_t *data,int is_first)
     }
 }
 
+int HandleInquiry(char* CurrentUser)
+{
+    char data[50][4064];
+    int messagecnt[50];
+    FILE *fd;
+    char path[50];
+    char filename[50];
+    snprintf(path,50,"%s/Chatty/service/%s/%s",getenv("HOME"), CurrentUser,"MessageBox");
+    struct dirent *dp;
+    DIR *dir=opendir(path);
+    if(!dir) return -1;
+    while ((dp=readdir(dir))!=NULL)
+    {
+        if(strcmp(dp->d_name,".")!=0&&strcmp(dp->d_name,"..")!=0)
+        {
+            snprintf(filename,"%s/%s",path,dp->d_name);
+            fd=fopen(filename,'r');
+
+        }
+
+    }
+    
+    if(access(filename,F_OK))
+}
+
 void* HandleClient(void* arg)
 {
     char CurrentUser[32]="";
@@ -198,7 +240,7 @@ void* HandleClient(void* arg)
     struct package buffer,reply;
     int rcv=-1;
     u_int16_t meth,len;
-    u_int8_t data[4096];
+    u_int8_t data[4064];
     while(1)
     {
         memset((void*)&buffer,0,sizeof(buffer));
@@ -244,13 +286,9 @@ void* HandleClient(void* arg)
             }
             case SDMSG:
             {
-                if(SendMessage(data,CurrentUser)==404)
+                if(SendMessage(data,CurrentUser)!=1)
                 {
-                    strcpy(reply.data, "sender or receiver not found");
-                }
-                else if(SendMessage(data)==405)
-                {
-                    strcpy(reply.data, "please login first!");
+                    strcpy(reply.data, "failed");
                 }
                 else
                 {
@@ -266,7 +304,7 @@ void* HandleClient(void* arg)
             }
             case INQRY:
             {
-
+                HandleInquery();
             }
             default:
             {

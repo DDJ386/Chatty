@@ -139,7 +139,7 @@ int SendMessage(uint8_t *data,char* CurrentUser)
 //     }
 // }
 
-int HandleInquiry(char* CurrentUser)
+int HandleInquiry(char* CurrentUser, int ClientSocket)
 {
     printf("func HandleInquiry\n");
     char buffer[4064]="";
@@ -166,7 +166,7 @@ int HandleInquiry(char* CurrentUser)
                 strcat(buffer,"\n");
                 cnt++;
             }
-            sprintf(data_buffer + strlen(data_buffer), "%s %d %s",dp->d_name,cnt,buffer);
+            sprintf(data_buffer + strlen(data_buffer), "%s %d%s",dp->d_name,cnt,buffer);
         }
     }
     char cmd[256];
@@ -177,7 +177,8 @@ int HandleInquiry(char* CurrentUser)
     reply.method=REPLY;
     strcpy(reply.data,data_buffer);
     reply.length=strlen(data_buffer);
-    ReplytoClient((void*)&reply, CurrentUser);
+    printf("%s",reply.data);
+    ReplytoClient((void*)&reply, ClientSocket);
     return 1;
 }
 
@@ -261,7 +262,7 @@ void* HandleClient(void* arg)
             // }
             case INQRY:
             {
-                HandleInquiry(CurrentUser);
+                HandleInquiry(CurrentUser, ClientSocket);
                 break;
             }
             default: {

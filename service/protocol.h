@@ -9,14 +9,14 @@
 #define FOLLW 5
 #define REPLY 6
 #define INQRY 7
+#define LOGOUT 8
 
 #define HEADER_LEN 32
 #define PACKAGE_SIZE 4096
-#define USER_SIZE 1000
 struct package {
-  uint16_t method;
-  uint16_t length;
-  uint8_t data[4064];
-}
+    uint16_t method;
+    uint16_t length;
+    char data[4064];
+};
 
 #endif

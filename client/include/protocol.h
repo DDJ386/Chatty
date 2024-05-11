@@ -9,6 +9,7 @@
 #define FOLLW 5
 #define REPLY 6
 #define INQRY 7
+#define LOGOUT 8
 
 #define HEADER_LEN 32
 #define PACKAGE_SIZE 4096

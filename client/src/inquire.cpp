@@ -2,6 +2,7 @@
 #include <unistd.h>
 
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <sstream>
 #include <string>
@@ -14,6 +15,7 @@ using namespace std;
 extern "C" {
 void *inquire(void *pvoid);
 void *receiveFile(char *data);
+void *receive(void *pvoid);
 }
 extern struct curPosition informZoneStart, informZoneEnd;
 extern char currentUser[32];
@@ -31,7 +33,7 @@ static void dealWith(char *buffer) {
         ss >> name >> cnt;
         string *messages = new string[cnt];
         for (int i = 0; i < cnt; i++) {
-            ss >> messages[i];
+            getline(ss, messages[i]);
         }
         pthread_mutex_lock(&mapLock);
         undealData[name] += cnt;
@@ -50,6 +52,7 @@ static void dealWith(char *buffer) {
         }
         pthread_mutex_unlock(&fileLock);
         file.close();
+        delete[] messages;
     }
 }
 
@@ -59,23 +62,23 @@ void *inquire(void *pvoid) {
     while (1) {
         message.method = INQRY;
         message.length = 0;
-        netLock();
         sendMessage(&message);
+        sleep(5);
+    }
+}
+
+void *receive(void *pvoid) {
+    (void)pvoid;
+    struct package message;
+    while (1) {
+        message.method = INQRY;
+        message.length = 0;
         receveMessage(&message);
-        netUnlock();
-
-        /* test data */
-        // message.method = REPLY;
-        // message.length = 1;
-        // snprintf(message.data, 4096, "%s %d %s %s %s %d %s", "alex", 2, "msg5", "msg6", "bob", 1,
-        //          "msg3");
-        /* test data end*/
-
+        cout<<"receive"<<endl;
         if (message.method == REPLY && message.length != 0) {
             dealWith(message.data);
         } else if (message.method == SDFLE) {
             receiveFile(message.data);
         }
-        sleep(5);
     }
 }

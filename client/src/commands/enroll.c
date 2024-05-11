@@ -52,7 +52,7 @@ again:
     // receive message
     receveMessage((void *)&message);
     if (message.method != REPLY || strcmp(message.data, "success")) {
-        perror("register faild\n");
+        perror("\nregister faild\n");
         exit(-1);
     }
 

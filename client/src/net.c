@@ -46,16 +46,12 @@ void netUnlock() { pthread_mutex_unlock(&netlock); }
 
 void sendMessage(struct package *message) {
     size_t len = message->length + HEADER_LEN;
-    send(client_fd, (void*)message, len, 0);
+    send(client_fd, (void*)message, 4096, 0);
 }
 
 void receveMessage(void *buffer) {
     memset(buffer, 0, 4096);
-    char buf[4096];
-    while (read(client_fd, buf, PACKAGE_SIZE) > 0) {
-        strcat(buffer, buf);
-        memset(buf, 0, sizeof(buf));
-    }
+    read(client_fd, buffer, PACKAGE_SIZE);
 }
 
 void closeConnect() { close(client_fd); }

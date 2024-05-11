@@ -29,7 +29,7 @@ int ServerSocket,ClientSocket;
 
 int Regis(uint8_t *data)
 {
-    //printf("regis func\n");
+    printf("regis func\n");
     int i=0,sum;
     char username[50];
     char password[50];
@@ -37,12 +37,13 @@ int Regis(uint8_t *data)
     sscanf(data,"%s %s", username, password);
     printf("%s\n%s\n", username, password);
     FILE *fd;
-    sprintf(filename,"%s %s",username,password);
+    printf("%s\n", filename);
     fd=fopen(filename,"r+");
     char checkUser[32];
     char checkPsd[32];
-    while (fscanf(fd, "%s %s", checkUser, checkPsd) != EOF) {
-        if (strcmp(username, checkUser) == 0) {
+    while (fscanf(fd, "%s %s", checkUser, checkPsd) != EOF)
+    {
+        if(strcmp(username, checkUser) == 0) {
             return -1;
         }
     }
@@ -52,9 +53,9 @@ int Regis(uint8_t *data)
     char cmd[256];
     sprintf(cmd, "mkdir %s/Chatty/service/%s",getenv("HOME"), username);
     system(cmd);
-    sprintf(cmd, "mkdir %s/Chatty/service/%s/%s", getenv("HOME"), username, "MessageBox");
+    sprintf(cmd,"mkdir %s/Chatty/service/%s/%s",getenv("HOME"), username,"MessageBox");
     system(cmd);
-    sprintf(cmd, "mkdir %s/Chatty/service/%s/%s", getenv("HOME"), username, "FileBox");
+    sprintf(cmd,"mkdir %s/Chatty/service/%s/%s",getenv("HOME"), username,"FileBox");
     system(cmd);
     return 1;
 }
@@ -85,8 +86,8 @@ int LoginCheck(u_int8_t *data, char * CurrentUser)
                 printf("password matched\n");
                 strcpy(CurrentUser,User);
                 return 1;
-            } else
-                return -1;
+            }
+            else return -1;
         }
     }
     return -1;
@@ -102,16 +103,16 @@ int ReplytoClient(struct package *packet)
 
 int SendMessage(uint8_t *data,char* CurrentUser)
 {
-    //printf("func SendMessage\n");
+    printf("func SendMessage\n");
     int i=0;
     char receiver[32];
     char filename[256];
     char message[4064];
     sscanf(data,"%s %[^\n]%*c",receiver,message);
-    //printf("dest user:%s\nmessage:%s\n", receiver, message);
+    printf("dest user:%s\nmessage:%s\n", receiver, message);
     FILE *fd;
     snprintf(filename, 256, "%s/Chatty/service/%s/MessageBox", getenv("HOME"), receiver);
-    //printf("%s\n", filename);
+    printf("%s\n", filename);
     fd=fopen(filename,"r+");
 
     if(access(filename,F_OK) == 0)
@@ -120,41 +121,42 @@ int SendMessage(uint8_t *data,char* CurrentUser)
         fd=fopen(filename,"a");
         fprintf(fd, "%s\n", message);
         fflush(fd);
-        fflush(fd);
         return 1;
-    } else
-        return -1;
+    }
+    else return -1;
 }
 
 
-int SendFile(uint8_t *data,int is_first,char* CurrentUser,char* Filename)
-{
-    int i=0;
-    uint16_t pkg_num;
-    char receiver[50];
-    char filename[50];
-    char filen[256];
-    char file[4064];
-    if(is_first)
-    {
-        sscanf(data,"%d %s %s",pkg_num,receiver,filename);
-        FILE *fd;
-        snprintf(filen,256,"%s/Chatty/service/%s/%s/%s",getenv("HOME"),CurrentUser,"Filebox",filename);
-    }
-    else
-    {
+// int SendFile(uint8_t *data,int is_first,char* CurrentUser,char* Filename)
+// {
+//     int i=0;
+//     uint16_t pkg_num;
+//     char receiver[50];
+//     char filename[50];
+//     char filen[256];
+//     char file[4064];
+//     if(is_first)
+//     {
+//         sscanf(data,"%d %s %s",pkg_num,receiver,filename);
+//         FILE *fd;
+//         snprintf(filen,256,"%s/Chatty/service/%s/%s/%s",getenv("HOME"),CurrentUser,"Filebox",filename);
+//     }
+//     else
+//     {
 
-    }
-}
+//     }
+// }
 
 int HandleInquiry(char* CurrentUser)
 {
+    printf("func HandleInquiry\n");
     char buffer[4064]="";
     char data_buffer[4064] ="";
     FILE *fd;
     char path[256];
     char filename[256];
-    snprintf(path, 256, "%s/Chatty/service/%s/MessageBox", getenv("HOME"), CurrentUser);
+    snprintf(path,256,"%s/Chatty/service/%s/MessageBox",getenv("HOME"), CurrentUser);
+    // printf("%s\n", path);
     struct dirent *dp;
     DIR *dir=opendir(path);
     if(!dir) return -1;
@@ -163,7 +165,7 @@ int HandleInquiry(char* CurrentUser)
         int cnt=0;
         if(strcmp(dp->d_name,".")!=0&&strcmp(dp->d_name,"..")!=0)
         {
-            sprintf(filename,"%s/%s",path,dp->d_name);
+            snprintf(filename,"%s/%s",path,dp->d_name);
             fd=fopen(filename,"r+");
             char msg[4064];
             while(fscanf(fd,"%[^\n]%*c",msg)!=EOF)
@@ -173,13 +175,12 @@ int HandleInquiry(char* CurrentUser)
                 cnt++;
             }
             sprintf(data_buffer + strlen(data_buffer), "%s %d %s",dp->d_name,cnt,buffer);
-            memset(buffer,0,sizeof(buffer));
         }
     }
-    closedir(dir);
-    char cmd[100];
-    sprintf(cmd,"rm -r /%s/Chatty/service/%s/MessageBox/*",getenv("HOME"),CurrentUser);
+    char cmd[256];
+    sprintf(cmd,256,"rm -r /%s/Chatty/service/%s/MessageBox/*",getenv("HOME"),CurrentUser);
     system(cmd);
+    closedir(dir);
     struct package reply;
     reply.method=REPLY;
     strcpy(reply.data,data_buffer);
@@ -192,8 +193,7 @@ void* HandleClient(void* arg)
 {
     char CurrentUser[32]="";
     char Filename[32]="";
-    int ClientSocket = *(int *)arg;
-    free(arg);
+    int ClientSocket = (int )arg;
     struct package buffer,reply;
     int rcv=-1;
     int is_first=1;
@@ -246,26 +246,26 @@ void* HandleClient(void* arg)
                 ReplytoClient((void *)&reply);
                 break;
             }
-            case SDFLE:
-            {   
-                if(is_first)
-                {
+            // case SDFLE:
+            // {   
+            //     if(is_first)
+            //     {
                     
-                    pkg_cnt=SendFile(data,1,CurrentUser);
-                    is_first=0;
-                }
-                else if(pkg_cnt>0)
-                {
-                    SendFile(data,0,CurrentUser);
-                    pkg_cnt--;
-                    if(pkg_cnt==0)
-                    {
-                        is_first=1;
-                    }
-                }
+            //         pkg_cnt=SendFile(data,1,CurrentUser);
+            //         is_first=0;
+            //     }
+            //     else if(pkg_cnt>0)
+            //     {
+            //         SendFile(data,0,CurrentUser);
+            //         pkg_cnt--;
+            //         if(pkg_cnt==0)
+            //         {
+            //             is_first=1;
+            //         }
+            //     }
                 
-                break;
-            }
+            //     break;
+            // }
             case INQRY:
             {
                 HandleInquiry(CurrentUser);

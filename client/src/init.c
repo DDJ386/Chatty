@@ -9,7 +9,7 @@
 
 extern struct curPosition screenSize;
 extern uint16_t vPartLine, hPartLine;
-extern void netInit();
+
 extern void enroll();
 extern void login();
 extern struct curPosition inputZoneStart, inputZoneEnd, displayZoneStart, displayZoneEnd,

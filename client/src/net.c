@@ -13,7 +13,8 @@
 
 #include "protocol.h"
 
-#define SERVER_IP "127.0.0.1"
+#define SERVER_IP "118.178.253.77"
+// #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8848
 
 static int client_fd;

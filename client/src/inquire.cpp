@@ -74,7 +74,6 @@ void *receive(void *pvoid) {
         message.method = INQRY;
         message.length = 0;
         receveMessage(&message);
-        cout<<"receive"<<endl;
         if (message.method == REPLY && message.length != 0) {
             dealWith(message.data);
         } else if (message.method == SDFLE) {

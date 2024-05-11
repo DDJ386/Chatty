@@ -17,7 +17,6 @@ void login() {
     char password[32];
     printf("please input your username:");
     scanf("%s", username);
-
     struct termios oldt, newt;
     tcgetattr(STDIN_FILENO, &oldt);
     newt = oldt;
@@ -53,7 +52,7 @@ void login() {
     snprintf(cmd, 256, "mkdir  %s/Chatty/client/user/%s/file", homeDir, username);
     system(cmd);
 
-    memcpy(currentUser, username, 32);
+    strcpy(currentUser, username);
     clearInput();
     printf("login success, press any key to continue");
     getchar();

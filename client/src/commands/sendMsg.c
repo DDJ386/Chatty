@@ -27,7 +27,9 @@ void sendMsg() {
     struct package package;
     package.method = SDMSG;
     sprintf(package.data,"%s %s", currentChat, message);
+    netLock();
     sendMessage(&package);
+    netUnlock();
 
     // print to history
     snprintf(filename, 256, "%s/Chatty/client/user/%s/record/%s", getenv("HOME"), currentUser,

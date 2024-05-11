@@ -17,16 +17,6 @@
 
 int ServerSocket,ClientSocket;
 
-/*int hash(char* user)
-{
-    int sum=0,N=997;
-    for(int i=0;user[i]!='\0';i++)
-    {
-        sum+=user[i];
-    }
-    return sum%N;
-}*/
-
 int Regis(uint8_t *data)
 {
     printf("regis func\n");
@@ -37,10 +27,11 @@ int Regis(uint8_t *data)
     sscanf(data,"%s %s", username, password);
     printf("%s\n%s\n", username, password);
     FILE *fd;
+    sprintf(filename,"%s/Chatty/service/user",getenv("HOME"));
     printf("%s\n", filename);
     fd=fopen(filename,"r+");
     char checkUser[32];
-    char checkPsd[32];
+    char checkPsd[32];  
     while (fscanf(fd, "%s %s", checkUser, checkPsd) != EOF)
     {
         if(strcmp(username, checkUser) == 0) {

@@ -1,17 +1,15 @@
+#include <arpa/inet.h>
+#include <dirent.h>
+#include <netinet/in.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <string.h>
-#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <pthread.h>
-#include <netinet/in.h>
-#include <dirent.h>
-
 
 #include "protocol.h"
-
 
 #define PORT 8848
 #define IP "127.0.0.1"
@@ -43,9 +41,8 @@ int Regis(uint8_t *data)
     fd=fopen(filename,"r+");
     char checkUser[32];
     char checkPsd[32];
-    while (fscanf(fd, "%s %s", checkUser, checkPsd) != EOF)
-    {
-        if(strcmp(username, checkUser) == 0) {
+    while (fscanf(fd, "%s %s", checkUser, checkPsd) != EOF) {
+        if (strcmp(username, checkUser) == 0) {
             return -1;
         }
     }
@@ -55,9 +52,9 @@ int Regis(uint8_t *data)
     char cmd[256];
     sprintf(cmd, "mkdir %s/Chatty/service/%s",getenv("HOME"), username);
     system(cmd);
-    sprintf(cmd,"mkdir %s/Chatty/service/%s/%s",getenv("HOME"), username,"MessageBox");
+    sprintf(cmd, "mkdir %s/Chatty/service/%s/%s", getenv("HOME"), username, "MessageBox");
     system(cmd);
-    sprintf(cmd,"mkdir %s/Chatty/service/%s/%s",getenv("HOME"), username,"FileBox");
+    sprintf(cmd, "mkdir %s/Chatty/service/%s/%s", getenv("HOME"), username, "FileBox");
     system(cmd);
     return 1;
 }
@@ -88,8 +85,8 @@ int LoginCheck(u_int8_t *data, char * CurrentUser)
                 printf("password matched\n");
                 strcpy(CurrentUser,User);
                 return 1;
-            }
-            else return -1;
+            } else
+                return -1;
         }
     }
     return -1;
@@ -99,7 +96,7 @@ int LoginCheck(u_int8_t *data, char * CurrentUser)
 int ReplytoClient(struct package *packet)
 {
     size_t len = packet->length + HEADER_LEN;
-    send(ClientSocket, (void*)packet, len, 0);
+    send(ClientSocket, (void *)packet, 4096, 0);
     return 0;
 }
 
@@ -123,9 +120,10 @@ int SendMessage(uint8_t *data,char* CurrentUser)
         fd=fopen(filename,"a");
         fprintf(fd, "%s\n", message);
         fflush(fd);
+        fflush(fd);
         return 1;
-    }
-    else return -1;
+    } else
+        return -1;
 }
 
 
@@ -154,9 +152,9 @@ int HandleInquiry(char* CurrentUser)
     char buffer[4064]="";
     char data_buffer[4064] ="";
     FILE *fd;
-    char path[50];
-    char filename[50];
-    snprintf(path,50,"%s/Chatty/service/%s/%s",getenv("HOME"), CurrentUser,"MessageBox");
+    char path[256];
+    char filename[256];
+    snprintf(path, 256, "%s/Chatty/service/%s/MessageBox", getenv("HOME"), CurrentUser);
     struct dirent *dp;
     DIR *dir=opendir(path);
     if(!dir) return -1;
@@ -202,61 +200,50 @@ void* HandleClient(void* arg)
     int pkg_cnt=0;
     u_int16_t meth,len;
     u_int8_t data[4064];
-    while(1)
-    {
-        memset((void*)&buffer,0,sizeof(buffer));
-        memset((void*)&reply,0,sizeof(reply));
-        reply.method=REPLY;
-        rcv=recv(ClientSocket,(void*)&buffer,sizeof(buffer), MSG_WAITALL);
-        meth=buffer.method;
-        len=buffer.length;
-        strcpy(data,buffer.data);
-        if(rcv<0)
-        {
+    while (1) {
+        usleep(1000);
+        memset((void *)&buffer, 0, sizeof(buffer));
+        memset((void *)&reply, 0, sizeof(reply));
+        reply.method = REPLY;
+        rcv = recv(ClientSocket, (void *)&buffer, sizeof(buffer), 0);
+        meth = buffer.method;
+        len = buffer.length;
+        if (meth) printf("receive package %d from socket:%d\n", meth, ClientSocket);
+        strcpy(data, buffer.data);
+        if (rcv < 0) {
             printf("failed to receive package!");
             close(ClientSocket);
             return NULL;
         }
-        switch(meth)
-        {
-            case REGIS:
-            {
-                if(Regis(data) == -1)
-                {
+        switch (meth) {
+            case REGIS: {
+                if (Regis(data) == -1) {
                     strcpy(reply.data, "failed");
-                }
-                else
-                {
+                } else {
+                    printf("regis success\n");
                     strcpy(reply.data, "success");
                 }
                 ReplytoClient((void*)&reply);
                 close(ClientSocket);
                 return NULL;
             }
-            case LOGIN:
-            {
-                if(LoginCheck(data,CurrentUser) == -1)
-                {
+            case LOGIN: {
+                if (LoginCheck(data, CurrentUser) == -1) {
                     strcpy(reply.data, "password incorrect!");
-                }
-                else
-                {
+                } else {
+                    printf("login success\n");
                     strcpy(reply.data, "success");
                 }
-                ReplytoClient((void*)&reply);
+                ReplytoClient((void *)&reply);
                 break;
             }
-            case SDMSG:
-            {
-                if(SendMessage(data,CurrentUser)!=1)
-                {
+            case SDMSG: {
+                if (SendMessage(data, CurrentUser) != 1) {
                     strcpy(reply.data, "failed");
-                }
-                else
-                {
+                } else {
                     strcpy(reply.data, "success");
                 }
-                ReplytoClient((void*)&reply);
+                ReplytoClient((void *)&reply);
                 break;
             }
             case SDFLE:
@@ -284,17 +271,14 @@ void* HandleClient(void* arg)
                 HandleInquiry(CurrentUser);
                 break;
             }
-            default:
-            {
+            default: {
                 break;
             }
         }
     }
 }
 
-
-int main()
-{
+int main() {
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_addr_len = sizeof(client_addr);
     system("touch user");
@@ -305,28 +289,25 @@ int main()
         return -1;
     }
 
-    server_addr.sin_family=AF_INET;
-    server_addr.sin_port=htons(PORT);
-    server_addr.sin_addr.s_addr=htonl(INADDR_ANY);
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(PORT);
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    if(bind(ServerSocket,(struct sockaddr *)&server_addr,sizeof(server_addr))==-1)
-    {
+    if (bind(ServerSocket, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
         perror("Failed to bind on port");
         return -1;
     }
 
-    if(listen(ServerSocket,BACKLOG)==-1)
-    {
+    if (listen(ServerSocket, BACKLOG) == -1) {
         perror("Failed to listen");
         return -1;
     }
-    
-    //connected
-    while(1)
-    {
-        ClientSocket=accept(ServerSocket,(struct sockaddr *)&client_addr,&client_addr_len);
-        if(ClientSocket==-1)
-        {
+
+    printf("start to listen\n");
+    // connected
+    while (1) {
+        ClientSocket = accept(ServerSocket, (struct sockaddr *)&client_addr, &client_addr_len);
+        if (ClientSocket == -1) {
             perror("fail to connection");
             continue;
         }

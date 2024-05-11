@@ -8,3 +8,4 @@ client/Makefile
 .vscode
 client/main
 client/user
+service/user

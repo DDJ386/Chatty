@@ -29,20 +29,20 @@ void login() {
 
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 
-    // // send message to server
-    // connectServer();
-    // struct package message;
-    // snprintf(message.data, sizeof(message.data), "%s %s", username, password);
-    // message.method = LOGIN;
-    // message.length = strlen(message.data);
-    // sendMessage(&message);
+    // send message to server
+    connectServer();
+    struct package message;
+    snprintf(message.data, sizeof(message.data), "%s %s", username, password);
+    message.method = LOGIN;
+    message.length = strlen(message.data);
+    sendMessage(&message);
 
-    // // receive message
-    // receveMessage((void *)&message);
-    // if (message.method != REPLY || strcmp(message.data, "success")) {
-    //     perror("login faild\n");
-    //     exit(-1);
-    // }
+    // receive message
+    receveMessage((void *)&message);
+    if (message.method != REPLY || strcmp(message.data, "success")) {
+        perror("login faild\n");
+        exit(-1);
+    }
 
     // login succeed
     // creat data file

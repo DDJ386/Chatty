@@ -215,7 +215,7 @@ void* HandleClient(void* arg)
                     printf("regis success\n");
                     strcpy(reply.data, "success");
                 }
-                ReplytoClient((void*)&reply);
+               ReplytoClient((void *)&reply,ClientSocket);
                 close(ClientSocket);
                 return NULL;
             }
@@ -226,7 +226,7 @@ void* HandleClient(void* arg)
                     printf("login success\n");
                     strcpy(reply.data, "success");
                 }
-                ReplytoClient((void *)&reply);
+                ReplytoClient((void *)&reply,ClientSocket);
                 break;
             }
             case SDMSG: {
@@ -235,7 +235,7 @@ void* HandleClient(void* arg)
                 } else {
                     strcpy(reply.data, "success");
                 }
-                ReplytoClient((void *)&reply);
+                ReplytoClient((void *)&reply,ClientSocket);
                 break;
             }
             // case SDFLE:

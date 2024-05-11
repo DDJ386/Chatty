@@ -165,7 +165,7 @@ int HandleInquiry(char* CurrentUser)
         int cnt=0;
         if(strcmp(dp->d_name,".")!=0&&strcmp(dp->d_name,"..")!=0)
         {
-            snprintf(filename,"%s/%s",path,dp->d_name);
+            snprintf(filename, 256,"%s/%s",path,dp->d_name);
             fd=fopen(filename,"r+");
             char msg[4064];
             while(fscanf(fd,"%[^\n]%*c",msg)!=EOF)
@@ -178,7 +178,7 @@ int HandleInquiry(char* CurrentUser)
         }
     }
     char cmd[256];
-    sprintf(cmd,256,"rm -r /%s/Chatty/service/%s/MessageBox/*",getenv("HOME"),CurrentUser);
+    snprintf(cmd,256,"rm -r /%s/Chatty/service/%s/MessageBox/*",getenv("HOME"),CurrentUser);
     system(cmd);
     closedir(dir);
     struct package reply;

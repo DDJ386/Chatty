@@ -129,7 +129,7 @@ int SendMessage(uint8_t *data,char* CurrentUser)
 }
 
 
-int SendFile(uint8_t *data,int is_first,char* CurrentUser)
+int SendFile(uint8_t *data,int is_first,char* CurrentUser,char* Filename)
 {
     int i=0;
     uint16_t pkg_num;
@@ -263,6 +263,7 @@ void* HandleClient(void* arg)
             {   
                 if(is_first)
                 {
+                    
                     pkg_cnt=SendFile(data,1,CurrentUser);
                     is_first=0;
                 }

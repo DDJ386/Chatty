@@ -169,7 +169,7 @@ int HandleInquiry(char* CurrentUser)
         }
     }
     char cmd[256];
-    snprintf(cmd,256,"rm -r /%s/Chatty/service/%s/MessageBox/*",getenv("HOME"),CurrentUser);
+    snprintf(cmd,256,"rm -r %s/Chatty/service/%s/MessageBox/*",getenv("HOME"),CurrentUser);
     system(cmd);
     closedir(dir);
     struct package reply;

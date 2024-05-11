@@ -185,7 +185,8 @@ void* HandleClient(void* arg)
 {
     char CurrentUser[32]="";
     char Filename[32]="";
-    int ClientSocket = (int)arg;
+    int ClientSocket = *(int*)arg;
+    free(arg);
     struct package buffer,reply;
     int rcv=-1;
     int is_first=1;
@@ -304,7 +305,9 @@ int main() {
             continue;
         }
         pthread_t thread;
-        if(pthread_create(&thread, NULL, HandleClient, (void*)ClientSocket) != 0) {
+        int *para = (int*)malloc(sizeof(int));
+        *para = ClientSocket;
+        if(pthread_create(&thread, NULL, HandleClient, (void*)para) != 0) {
             perror("Failed to create thread");
             close(ClientSocket);
         }

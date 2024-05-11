@@ -59,11 +59,13 @@ static void dealWith(char *buffer) {
 void *inquire(void *pvoid) {
     (void)pvoid;
     struct package message;
+    message.method = INQRY;
+    message.length = 0;
     while (1) {
-        message.method = INQRY;
-        message.length = 0;
+        netLock();
         sendMessage(&message);
-        sleep(5);
+        netUnlock();
+        sleep(2);
     }
 }
 

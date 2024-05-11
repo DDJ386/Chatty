@@ -6,7 +6,7 @@
 #include "display.h"
 #include "net.h"
 
-#define FLPKG_SZ 4048
+#define FLPKG_SZ (DATA_SEZE - sizeof(uint16_t))
 
 struct firstPkg {
     uint16_t pkg_cnt;       // 一共要发多少包

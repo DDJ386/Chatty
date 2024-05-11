@@ -85,7 +85,7 @@ int LoginCheck(u_int8_t *data, char * CurrentUser)
 }
 
 
-int ReplytoClient(struct package *packet)
+int ReplytoClient(struct package *packet,int ClientSocket)
 {
     size_t len = packet->length + HEADER_LEN;
     send(ClientSocket, (void *)packet, 4096, 0);
@@ -273,7 +273,7 @@ int main() {
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_addr_len = sizeof(client_addr);
     system("touch user");
-
+    int ServerSocket,ClientSocket;
     ServerSocket=socket(AF_INET,SOCK_STREAM,0);
     if (ServerSocket == -1) {
         perror("Failed to create socket");

@@ -11,8 +11,9 @@
 #define INQRY 7
 #define LOGOUT 8
 
-#define HEADER_LEN 32
-#define PACKAGE_SIZE 4096
+#define HEADER_LEN (2*sizeof(uint16_t))
+#define PACKAGE_SIZE sizeof(struct package)
+#define DATA_SEZE (PACKAGE_SIZE - HEADER_LEN)
 struct package {
     uint16_t method;
     uint16_t length;

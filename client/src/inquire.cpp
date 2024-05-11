@@ -71,8 +71,6 @@ void *receive(void *pvoid) {
     (void)pvoid;
     struct package message;
     while (1) {
-        message.method = INQRY;
-        message.length = 0;
         receveMessage(&message);
         if (message.method == REPLY && message.length != 0) {
             dealWith(message.data);

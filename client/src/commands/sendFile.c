@@ -27,7 +27,7 @@ void sendFile() {
     // open file
     char filename[256];
     char path[512];
-    scanf(" %[^\n]%*c", filename);
+    scanf(" %s", filename);
     sprintf(path, "%s/Chatty/client/user/%s/file/%s", getenv("HOME"), currentUser, filename);
 
     FILE *fd;

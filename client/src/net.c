@@ -51,7 +51,7 @@ void sendMessage(struct package *message) {
 }
 
 void receveMessage(void *buffer) {
-    memset(buffer, 0, 4096);
+    memset(buffer, 0, DATA_SEZE);
     read(client_fd, buffer, PACKAGE_SIZE);
 }
 

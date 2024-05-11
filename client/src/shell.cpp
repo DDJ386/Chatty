@@ -11,6 +11,8 @@ extern "C" {
 void help();
 void touch();
 void sendMsg();
+void sendFile();
+void logout();
 }
 
 typedef void (*pfunc)();
@@ -19,7 +21,9 @@ map<string, pfunc> commands = {
     {"help", help},
     {"touch", touch},
     {"sdmsg", sendMsg},
-    {"sd", sendMsg}
+    {"sd", sendMsg},
+    {"sdfile", sendFile},
+    {"logout", logout}
 };
 
 void shell() {

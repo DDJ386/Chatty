@@ -204,7 +204,7 @@ void* HandleClient(void* arg)
         memset((void*)&buffer,0,sizeof(buffer));
         memset((void*)&reply,0,sizeof(reply));
         reply.method=REPLY;
-        rcv=recv(ClientSocket,(void*)&buffer,sizeof(buffer),0);
+        rcv=recv(ClientSocket,(void*)&buffer,sizeof(buffer), MSG_WAITALL);
         meth=buffer.method;
         len=buffer.length;
         strcpy(data,buffer.data);

@@ -17,8 +17,6 @@
 
 int ServerSocket,ClientSocket;
 int registed[USER_SIZE];
-char CurrentUser[50];
-
 
 typedef struct 
 {
@@ -29,7 +27,7 @@ typedef struct
 
 User usertable[USER_SIZE];
 
-int hash(char* user)
+/*int hash(char* user)
 {
     int sum=0,N=997;
     for(int i=0;user[i]!='\0';i++)
@@ -37,13 +35,14 @@ int hash(char* user)
         sum+=user[i];
     }
     return sum%N;
-}
+}*/
 
 int Regis(uint8_t *data)
 {
     int i=0,sum;
     char username[50]="";
     char password[50]="";
+    char filename[100];
     while(data[i]!='\0')
     {
         strcat(username,data[i]);
@@ -58,49 +57,68 @@ int Regis(uint8_t *data)
     }
     i++;
     password[i]='\0';
-    sum=hash(username);
-    if(registed[sum]!=0)
+
+    FILE *fd;
+    snprintf(filename, 100, "%s/Chatty/service/%s", getenv("HOME"), "user");
+    fd=fopen(filename,'r+');
+    char checkUser[32];
+    char checkPsd[32];
+    while (fscanf(fd, "%s %s", checkUser, checkPsd) != EOF)
     {
-        return -1;
+        if(strcmp(username, checkUser) == 0) {
+            return -1;
+        }
     }
-    else
-    {
-        strcpy(usertable[sum].username,username);
-        strcpy(usertable[sum].password,password);
-        usertable[sum].state=0;
-        registed[sum]=1;
-        return 1;
-    }
+    fprintf(fd,"%s %s\n",username,password);
+    char cmd[64];
+    sprintf(cmd, "mkdir %s/Chatty/service/%s",getenv("HOME"), username);
+    system(cmd);
+    sprintf(cmd,"mkdir %s/Chatty/service/%s/%s",getenv("HOME"), username,"MessageBox");
+    system(cmd);
+    sprintf(cmd,"mkdir %s/Chatty/service/%s/%s",getenv("HOME"), username,"FileBox");
+    return 1;
+    //sum=hash(username);
 }
 
-int LoginCheck(u_int8_t *data)
+int LoginCheck(u_int8_t *data, char * CurrentUser)
 {
     int i=0,id;
     char password[50]="";
-    while(data[i]!='\0')
+    char filename[100];
+    char User[50]="";
+    // while(data[i]!='\0')
+    // {
+    //     strcat(CurrentUser,data[i]);
+    //     i++;
+    // }
+    // i++;
+    // CurrentUser[i]='\0';
+    // while(data[i]!='\0')
+    // {
+    //     strcat(password,data[i]);
+    //     i++;
+    // }
+    // i++;
+    // password[i]='\0';
+    sscanf(data,"%s %s", User, password);
+    FILE *fd;
+    snprintf(filename, 100, "%s/Chatty/service/%s", getenv("HOME"), "user");
+    fd=fopen(filename,'r+');
+    char checkUser[32];
+    char checkPwd[32];
+    while(fscanf(fd,"%s %s",checkUser,checkPwd)!=EOF)
     {
-        strcat(CurrentUser,data[i]);
-        i++;
+        if(strcmp(CurrentUser,checkUser)==0)
+        {
+            if(strcmp(password,checkPwd)==0)
+            {
+                strcpy(CurrentUser,User);
+                return 1;
+            }
+            else return -1;
+        }
     }
-    i++;
-    CurrentUser[i]='\0';
-    while(data[i]!='\0')
-    {
-        strcat(password,data[i]);
-        i++;
-    }
-    i++;
-    password[i]='\0';
-    id=hash(CurrentUser);
-    if(strcmp(usertable[id].password,password)!=0)
-    {
-        return -1;
-    }
-    else
-    {
-        usertable[id].state=1;
-        return 1;
-    }
+    return -1;
 }
 
 int ReplytoClient(struct package *packet)
@@ -110,13 +128,14 @@ int ReplytoClient(struct package *packet)
     return 0;
 }
 
-int SendMessage(uint8_t *data)
+int SendMessage(uint8_t *data,char* CurrentUser)
 {
     int i=0;
-    char* receiver;
-    char* filename;
-    char* message;
-    while(data[i]!=' ')
+    char receiver[50];
+    char filename[50];
+    char message[4064];
+    sscanf(data,"%s %s",receiver,message);
+    /*while(data[i]!=' ')
     {
         strcat(receiver,data[i]);
         i++;
@@ -126,37 +145,36 @@ int SendMessage(uint8_t *data)
     {
         strcat(message,data[i]);
         i++;
-    }
-    if(registed[hash(receiver)]==0)
+    }   */
+    FILE *fd;
+    snprintf(filename, 256, "%s/Chatty/service/%s", "user");
+    fd=fopen(filename,'r+');
+    if(strcmp(CurrentUser,"")==0)
     {
-        return 404;
+        return -1;
     }
-    else
-    {    
-        FILE *fd;
-        snprintf(filename, 256, "%s/Chatty/service/%s/%s", getenv("HOME"), receiver,sender);
+    while()
+    snprintf(filename, 256, "%s/Chatty/service/%s/%s/%s", getenv("HOME"), receiver,"MessageBox",CurrentUser);
         //filename=getenv("HOME");
         //filename+="/Chatty/service/";
         //filename+=receiver;
         //filename+="/";
         //filename+=sender;
-        fd=fopen(filename,'a');
-        fprintf(fd, "%s", message);
-        return 1;
-    }
+    fd=fopen(filename,'a');
+    fprintf(fd, "%s\n", message);
+    return 1;
 }
 
-int SendFile(uint8_t *data)
+int SendFile(uint8_t *data,int is_first)
 {
     int i=0;
-    char* sender;
+    uint16_t pkg_num;
     char* receiver;
     char* filename;
     char* file;
-    while(data[i]!=' ')
+    if(is_first)
     {
-        strcat(sender,data[i]);
-        i++;
+        
     }
     i++;
     while(data[i]!=' ')
@@ -172,15 +190,18 @@ int SendFile(uint8_t *data)
     }
 }
 
-void* HandleClient(void* arg,u_int16_t method)
+void* HandleClient(void* arg)
 {
+    char CurrentUser[32]="";
     int ClientSocket = *(int *)arg;
     free(arg);
     struct package buffer,reply;
     int rcv=-1;
     u_int16_t meth,len;
     u_int8_t data[4096];
-    memset((void*)&buffer,0,sizeof(buffer));
+    while(1)
+    {
+        memset((void*)&buffer,0,sizeof(buffer));
         memset((void*)&reply,0,sizeof(reply));
         reply.method=REPLY;
         rcv=recv(ClientSocket,(void*)&buffer,sizeof(buffer),0);
@@ -210,7 +231,7 @@ void* HandleClient(void* arg,u_int16_t method)
             }
             case LOGIN:
             {
-                if(LoginCheck(data) == -1)
+                if(LoginCheck(data,CurrentUser) == -1)
                 {
                     strcpy(reply.data, "password incorrect!");
                 }
@@ -223,7 +244,7 @@ void* HandleClient(void* arg,u_int16_t method)
             }
             case SDMSG:
             {
-                if(SendMessage(data)==404)
+                if(SendMessage(data,CurrentUser)==404)
                 {
                     strcpy(reply.data, "sender or receiver not found");
                 }
@@ -240,7 +261,7 @@ void* HandleClient(void* arg,u_int16_t method)
             }
             case SDFLE:
             {
-                
+                    
                 SendFile();
             }
             case INQRY:
@@ -252,6 +273,7 @@ void* HandleClient(void* arg,u_int16_t method)
                 break;
             }
         }
+    }
 }
 
 

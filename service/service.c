@@ -88,6 +88,7 @@ int LoginCheck(u_int8_t *data, char * CurrentUser)
 int ReplytoClient(struct package *packet,int ClientSocket)
 {
     size_t len = packet->length + HEADER_LEN;
+    printf("reply to socket:%d",ClientSocket);
     send(ClientSocket, (void *)packet, 4096, 0);
     return 0;
 }
@@ -184,7 +185,7 @@ void* HandleClient(void* arg)
 {
     char CurrentUser[32]="";
     char Filename[32]="";
-    int ClientSocket = (int )arg;
+    int ClientSocket = (int)arg;
     struct package buffer,reply;
     int rcv=-1;
     int is_first=1;

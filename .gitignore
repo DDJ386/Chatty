@@ -4,7 +4,6 @@ client/.vscode/
 client/CMakeFiles
 client/cmake_install.cmake
 client/CMakeCache.txt
-client/Makefile
 .vscode
 client/main
 client/user

@@ -223,8 +223,8 @@ int HandleInquiry(char* CurrentUser)
         if(strcmp(dp->d_name,".")!=0&&strcmp(dp->d_name,"..")!=0)
         {
             snprintf(filename,"%s/%s",path,dp->d_name);
-            fd=fopen(filename,'r');
-
+            fd=fopen(filename,'r+');
+            while(fscanf(fd,"%s"))
         }
 
     }
@@ -246,7 +246,7 @@ void* HandleClient(void* arg)
         memset((void*)&buffer,0,sizeof(buffer));
         memset((void*)&reply,0,sizeof(reply));
         reply.method=REPLY;
-        rcv=recv(ClientSocket,(void*)&buffer,sizeof(buffer),0);
+        rcv=recv(ClientSocket,(void*)&buffer,sizeof(buffer),MSG_WAITALL);
         meth=buffer.method;
         len=buffer.length;
         strcpy(data,buffer.data);

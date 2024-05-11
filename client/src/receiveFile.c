@@ -22,9 +22,12 @@ extern char currentUser[32];
 extern char currentChat[32];
 
 void receiveFile(char* data) {
-    char path[512];
+    char path[256];
+    char filename[256];
     struct receivePkg* package_data = (struct receivePkg*)data;
     sprintf(path, "%s/Chatty/client/user/%s/file/%s.frag", getenv("HOME"), currentUser,
+            package_data->filename);
+    sprintf(filename, "%s/Chatty/client/user/%s/file/%s", getenv("HOME"), currentUser,
             package_data->filename);
     int pkg_current = 0;
 
@@ -51,8 +54,13 @@ void receiveFile(char* data) {
         if (package.method == 0) {
             break;
         } else {
+            pkg_current++;
             struct filePkg* pp = (struct filePkg*)package.data;
             fwrite(pp->data, sizeof(char), package.length - sizeof(pp->pkg_current), fd);
         }
+    }
+    if (pkg_current == package_data->pkg_cnt) {
+        char cmd[576];
+        sprintf("mv %s %s", path, filename);
     }
 }

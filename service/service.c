@@ -177,7 +177,7 @@ int HandleInquiry(char* CurrentUser)
     reply.method=REPLY;
     strcpy(reply.data,data_buffer);
     reply.length=strlen(data_buffer);
-    ReplytoClient((void*)&reply);
+    ReplytoClient((void*)&reply, CurrentUser);
     return 1;
 }
 

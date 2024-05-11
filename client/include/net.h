@@ -9,6 +9,8 @@ void connectServer();
 void sendMessage(struct package *message);
 void receveMessage(void *buffer);
 void closeConnect();
+void netLock();
+void netUnlock();
 #ifdef __cplusplus
 }
 #endif

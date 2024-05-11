@@ -18,7 +18,8 @@ typedef void (*pfunc)();
 map<string, pfunc> commands = {
     {"help", help},
     {"touch", touch},
-    {"sdmsg", sendMsg}
+    {"sdmsg", sendMsg},
+    {"sd", sendMsg}
 };
 
 void shell() {

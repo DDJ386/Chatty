@@ -13,6 +13,7 @@ using namespace std;
 
 extern "C" {
 void *inquire(void *pvoid);
+void *receiveFile(char *data);
 }
 extern struct curPosition informZoneStart, informZoneEnd;
 extern char currentUser[32];
@@ -56,20 +57,24 @@ void *inquire(void *pvoid) {
     (void)pvoid;
     struct package message;
     while (1) {
-        // message.method = INQRY;
-        // message.length = 0;
-        // sendMessage(&message);
-        // receveMessage(&message);
+        message.method = INQRY;
+        message.length = 0;
+        netLock();
+        sendMessage(&message);
+        receveMessage(&message);
+        netUnlock();
 
         /* test data */
-        message.method = REPLY;
-        message.length = 1;
-        snprintf(message.data, 4096, "%s %d %s %s %s %d %s", "alex", 2, "msg5", "msg6", "bob", 1,
-                 "msg3");
+        // message.method = REPLY;
+        // message.length = 1;
+        // snprintf(message.data, 4096, "%s %d %s %s %s %d %s", "alex", 2, "msg5", "msg6", "bob", 1,
+        //          "msg3");
         /* test data end*/
 
         if (message.method == REPLY && message.length != 0) {
             dealWith(message.data);
+        } else if (message.method == SDFLE) {
+            receiveFile(message.data);
         }
         sleep(5);
     }

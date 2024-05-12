@@ -92,6 +92,6 @@ void init() {
     zoneInit();
     setCur(0, 0);
     printLogo();
-    authenticateUser();
+    while(!strcmp(currentUser, ""))authenticateUser();
     clearInput();
 }

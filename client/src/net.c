@@ -46,7 +46,7 @@ void netLock() { pthread_mutex_lock(&netlock); }
 void netUnlock() { pthread_mutex_unlock(&netlock); }
 
 void sendMessage(struct package *message) {
-    size_t len = message->length + HEADER_LEN;
+    // size_t len = message->length + HEADER_LEN;
     send(client_fd, (void*)message, 4096, 0);
 }
 

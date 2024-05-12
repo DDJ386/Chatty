@@ -50,7 +50,9 @@ again:
     sendMessage(&message);
 
     // receive message
-    receveMessage((void *)&message);
+    if(receveMessage((void *)&message) < 0){
+        printf("connect timeout\n");
+    }
     if (message.method != REPLY || strcmp(message.data, "success")) {
         printf("\nregister faild, press any key to continue\n");
         return;

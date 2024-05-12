@@ -6,8 +6,8 @@
 extern "C" {
 #endif
 void connectServer();
-void sendMessage(struct package *message);
-void receveMessage(void *buffer);
+int sendMessage(struct package *message);
+int receveMessage(void *buffer);
 void closeConnect();
 void netLock();
 void netUnlock();

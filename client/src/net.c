@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -35,9 +36,18 @@ void connectServer() {
         perror("Invalid address/ Address not supported");
         exit(EXIT_FAILURE);
     }
+
     // connect the server
     if (connect(client_fd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) < 0) {
         perror("Connection failed");
+        exit(EXIT_FAILURE);
+    }
+
+    struct timeval timeout;
+    timeout.tv_sec = 10;  // 设置超时时间为 10 秒
+    timeout.tv_usec = 0;
+    if (setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+        perror("setsockopt");
         exit(EXIT_FAILURE);
     }
 }
@@ -45,14 +55,14 @@ void connectServer() {
 void netLock() { pthread_mutex_lock(&netlock); }
 void netUnlock() { pthread_mutex_unlock(&netlock); }
 
-void sendMessage(struct package *message) {
+int sendMessage(struct package *message) {
     // size_t len = message->length + HEADER_LEN;
-    send(client_fd, (void*)message, 4096, 0);
+    return send(client_fd, (void *)message, 4096, 0);
 }
 
-void receveMessage(void *buffer) {
+int receveMessage(void *buffer) {
     memset(buffer, 0, DATA_SEZE);
-    read(client_fd, buffer, PACKAGE_SIZE);
+    return recv(client_fd, buffer, PACKAGE_SIZE, 0);
 }
 
 void closeConnect() { close(client_fd); }

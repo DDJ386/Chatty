@@ -65,7 +65,7 @@ void *inquire(void *pvoid) {
         netLock();
         sendMessage(&message);
         netUnlock();
-        sleep(2);
+        sleep(1);
     }
 }
 
@@ -73,11 +73,15 @@ void *receive(void *pvoid) {
     (void)pvoid;
     struct package message;
     while (1) {
-        receveMessage(&message);
+        if (receveMessage(&message) < 0){
+            continue;
+        }
         if (message.method == REPLY && message.length != 0) {
             dealWith(message.data);
         } else if (message.method == SDFLE) {
+            netLock();
             receiveFile(message.data);
+            netUnlock();
         }
     }
 }

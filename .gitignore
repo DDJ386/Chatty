@@ -8,3 +8,4 @@ client/CMakeCache.txt
 client/main
 client/user
 service/user
+service/service

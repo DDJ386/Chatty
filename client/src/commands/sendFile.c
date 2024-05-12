@@ -64,6 +64,7 @@ void sendFile() {
             fseek(fd, offset, SEEK_SET);
         }
         // 传输文件
+        netLock();
         for (int i = start; i < fp->pkg_cnt; i++) {
             struct filePkg *pp = (struct filePkg *)package.data;
             package.method = SDFLE;
@@ -74,5 +75,6 @@ void sendFile() {
             fread(pp->data, sizeof(char), package.length - sizeof(pp->pkg_current), fd);
             sendMessage(&package);
         }
+        netUnlock();
     }
 }

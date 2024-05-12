@@ -39,8 +39,10 @@ void login() {
     // receive message
     receveMessage((void *)&message);
     if (message.method != REPLY || strcmp(message.data, "success")) {
-        perror("login faild\n");
-        exit(-1);
+        printf("\nlogin faild, press any key to continue\n");
+        getchar();
+        getchar();
+        return;
     }
 
     // login succeed

@@ -52,8 +52,8 @@ again:
     // receive message
     receveMessage((void *)&message);
     if (message.method != REPLY || strcmp(message.data, "success")) {
-        perror("\nregister faild\n");
-        exit(-1);
+        printf("\nregister faild, press any key to continue\n");
+        return;
     }
 
     closeConnect();

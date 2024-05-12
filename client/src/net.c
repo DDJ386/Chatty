@@ -62,7 +62,7 @@ int sendMessage(struct package *message) {
 
 int receveMessage(void *buffer) {
     memset(buffer, 0, DATA_SEZE);
-    return recv(client_fd, buffer, PACKAGE_SIZE, 0);
+    return recv(client_fd, buffer, PACKAGE_SIZE, MSG_WAITALL);
 }
 
 void closeConnect() { close(client_fd); }

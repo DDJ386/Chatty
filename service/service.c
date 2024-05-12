@@ -12,6 +12,10 @@
 
 #include "protocol.h"
 
+#ifndef DEBUG
+#define printf(...)
+#endif 
+
 #define PORT 8848
 #define IP "127.0.0.1"
 #define BACKLOG 1024
@@ -89,7 +93,6 @@ int LoginCheck(u_int8_t *data, char * CurrentUser)
 
 int ReplytoClient(struct package *packet,int ClientSocket)
 {
-    size_t len = packet->length + HEADER_LEN;
     printf("reply to socket:%d\n",ClientSocket);
     send(ClientSocket, (void *)packet, 4096, 0);
     return 0;
@@ -138,8 +141,9 @@ int UploadFile(uint8_t *data,int ClientSocket,char *CurrentUser)
     int current_pkg = 0;
     char frag_file[256];
     char currentname[256];
-    sprintf(frag_file,"%s/Chatty/service/%s/Filebox/%s/%s.frag",getenv("HOME"),DestUser, CurrentUser, Filename);
-    sprintf(currentname,"%s/Chatty/service/%s/Filebox/%s/%s",getenv("HOME"),DestUser, CurrentUser, Filename);
+    sprintf(frag_file,"%s/Chatty/service/%s/FileBox/%s/%s.frag",getenv("HOME"),DestUser, CurrentUser, Filename);
+    sprintf(currentname,"%s/Chatty/service/%s/FileBox/%s/%s",getenv("HOME"),DestUser, CurrentUser, Filename);
+    printf("%s\n",frag_file);
 
     if(access(frag_file,F_OK)==0)
     {
@@ -155,11 +159,15 @@ int UploadFile(uint8_t *data,int ClientSocket,char *CurrentUser)
     }
     else
     {
+        char path[512];
+        sprintf(path,"%s/Chatty/service/%s/FileBox/%s",getenv("HOME"),DestUser, CurrentUser);
+        mkdir(path, 777);
         printf("no frag file\n");
         strcpy(reply.data,"OK");
     }
     reply.method=REPLY;
-    reply.length=sizeof(reply.data);
+    // reply.length=sizeof(reply.data);
+    reply.length = 0;
     ReplytoClient((void*)&reply,ClientSocket);
 
     FILE *frag;
@@ -168,14 +176,17 @@ int UploadFile(uint8_t *data,int ClientSocket,char *CurrentUser)
     while(1)
     {
         struct package package;
-        if(recv(ClientSocket,(void*)&package,sizeof(package),0) < 0L)
+        if(recv(ClientSocket,(void*)&package,sizeof(package),MSG_WAITALL) < 0)
         {
             fclose(frag);
             return -1;
         }
+        printf("%d %d\n",package.method, package.length);
         struct FilePkg *pFilePkg = (struct FilePkg *)package.data;
         current_pkg ++;
         printf("receive file:%d\n", current_pkg);
+        fwrite(pFilePkg->data, sizeof(char), package.length - sizeof(uint16_t),frag);
+        fflush(frag);
         if(current_pkg==pkg_num)
         {
             rename(frag_file, currentname);
@@ -184,8 +195,7 @@ int UploadFile(uint8_t *data,int ClientSocket,char *CurrentUser)
         }
         else
         {
-            fwrite(package.data, sizeof(char), package.length - sizeof(uint16_t),frag);
-            fflush(frag);
+            // do nothing
         }
     }
 }
@@ -267,6 +277,12 @@ int HandleInquiry(char* CurrentUser,int ClientSocket)
         {
             if(strcmp(dp3->d_name,".")==0 || strcmp(dp3->d_name,"..")==0)
                 continue;
+            size_t str_len = strlen(dp3->d_name);
+            size_t suffix_len = strlen(".frag");
+            if (str_len >= suffix_len && strcmp(dp3->d_name + str_len - suffix_len, ".frag") == 0)
+                continue;
+        
+            printf("start to download in dirs %s\n",file_name);
             FILE *fd;
             char path[512];
             snprintf(path,512,"%s/Chatty/service/%s/FileBox/%s/%s",getenv("HOME"),CurrentUser,dp2->d_name,dp3->d_name);
@@ -280,7 +296,7 @@ int HandleInquiry(char* CurrentUser,int ClientSocket)
             ReplytoClient((void*)&reply,ClientSocket);
 
             struct package bufferpkg;
-            if(recv(ClientSocket,(void*)&bufferpkg,sizeof(bufferpkg),0) < 0){
+            if(recv(ClientSocket,(void*)&bufferpkg,sizeof(bufferpkg),MSG_WAITALL) < 0){
                 return -1;
             }
             int start = 0;
@@ -294,15 +310,19 @@ int HandleInquiry(char* CurrentUser,int ClientSocket)
             fseek(fd, offset, SEEK_SET);
             for(int i = start + 1; i <= pkg_num; i++)
             {
-                struct FilePkg *fp = (struct FilePkg *)reply.data;
+                
+                struct FilePkg *fp = (struct FilePkg *)(reply.data);
                 if(i == pkg_num)
                     reply.length = (st.st_size % FLPKG_SZ) + sizeof(fp->pkg_current);
                 else 
                     reply.length = PACKAGE_SIZE - HEADER_LEN;
                 reply.method=SDFLE;
+                fp->pkg_current = i;
                 fread(fp->data, sizeof(char), reply.length - sizeof(fp->pkg_current), fd);
+                printf("start to transmit package %d length %d\n", fp->pkg_current, reply.length);
                 ReplytoClient((void*)&reply,ClientSocket);
-            }            
+            }           
+            fclose(fd); 
         }
         closedir(dir3);
     }
@@ -329,16 +349,16 @@ void* HandleClient(void* arg)
         memset((void *)&buffer, 0, sizeof(buffer));
         memset((void *)&reply, 0, sizeof(reply));
         reply.method = REPLY;
-        rcv = recv(ClientSocket, (void *)&buffer, sizeof(buffer), 0);
-        meth = buffer.method;
-        len = buffer.length;
-        if (meth) printf("receive package %d from socket:%d\n", meth, ClientSocket);
-        strcpy(data, buffer.data);
-        if (rcv < 0) {
+        if (recv(ClientSocket, (void *)&buffer, sizeof(buffer), MSG_WAITALL) < 0) {
             printf("failed to receive package!");
             close(ClientSocket);
             return NULL;
         }
+        meth = buffer.method;
+        len = buffer.length;
+        if (meth) printf("receive package %d from socket:%d\n", meth, ClientSocket);
+        strcpy(data, buffer.data);
+        
         switch (meth) {
             case REGIS: {
                 if (Regis(data) == -1) {
@@ -358,21 +378,24 @@ void* HandleClient(void* arg)
                     printf("login success\n");
                     strcpy(reply.data, "success");
                 }
+                reply.length = strlen(reply.data);
                 ReplytoClient((void *)&reply,ClientSocket);
                 break;
             }
             case SDMSG: {
                 if (SendMessage(data, CurrentUser) != 1) {
-                    strcpy(reply.data, "failed");
+                    // strcpy(reply.data, "failed");
                 } else {
-                    strcpy(reply.data, "success");
+                    // strcpy(reply.data, "success");
                 }
-                ReplytoClient((void *)&reply,ClientSocket);
+                // reply.length = strlen(reply.data);
+                // ReplytoClient((void *)&reply,ClientSocket);
                 break;
             }
             case SDFLE:
             {   
-
+                UploadFile(data,ClientSocket,CurrentUser);
+                break;
             }
             case INQRY:
             {
@@ -418,6 +441,14 @@ int main() {
         if (ClientSocket == -1) {
             perror("fail to connection");
             continue;
+        }
+        struct timeval timeout;
+        timeout.tv_sec = 10; // 设置超时时间为 10 秒
+        timeout.tv_usec = 0;
+
+        if (setsockopt(ClientSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+            perror("setsockopt");
+            exit(EXIT_FAILURE);
         }
         pthread_t thread;
         int *para = (int*)malloc(sizeof(int));

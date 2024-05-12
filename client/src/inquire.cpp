@@ -14,7 +14,8 @@ using namespace std;
 
 extern "C" {
 void *inquire(void *pvoid);
-void *receiveFile(char *data);
+void receiveFile(char *data);
+void startToSend(char *data);
 void *receive(void *pvoid);
 }
 extern struct curPosition informZoneStart, informZoneEnd;
@@ -82,6 +83,9 @@ void *receive(void *pvoid) {
             netLock();
             receiveFile(message.data);
             netUnlock();
+        }
+        else if(message.method == REPLY && message.length == 0) {
+            startToSend(message.data);
         }
     }
 }

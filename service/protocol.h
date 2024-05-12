@@ -17,7 +17,7 @@
 struct package {
     uint16_t method;
     uint16_t length;
-    char data[4064];
+    char data[4092];
 };
 
 #endif

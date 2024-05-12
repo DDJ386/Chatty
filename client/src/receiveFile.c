@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "net.h"
+#include "display.h"
 
 #define FLPKG_SZ (PACKAGE_SIZE - HEADER_LEN - sizeof(uint16_t))
 
@@ -23,11 +24,10 @@ void receiveFile(char* data) {
     int pkgCnt;
     char srcUsername[32], fileName[32];
     int pkg_current = 0;
-    sscanf(data,"%d%s %s", &pkgCnt, srcUsername, fileName);
+    sscanf(data, "%d%s %s", &pkgCnt, srcUsername, fileName);
     sprintf(fragFile, "%s/Chatty/client/user/%s/file/%s.frag", getenv("HOME"), currentUser,
             fileName);
-    sprintf(destFile, "%s/Chatty/client/user/%s/file/%s", getenv("HOME"), currentUser,
-            fileName);
+    sprintf(destFile, "%s/Chatty/client/user/%s/file/%s", getenv("HOME"), currentUser, fileName);
 
     struct package package;
     if (access(fragFile, F_OK) == 0) {
@@ -46,18 +46,26 @@ void receiveFile(char* data) {
     package.length = strlen(package.data);
     sendMessage(&package);
 
+    clearInput();
+    positionPrint(inputZoneStart, inputZoneEnd, "receiving file: %s from %s please wait\n", fileName, srcUsername);
+
     FILE* fd = fopen(fragFile, "a");
     while (1) {
+        struct filePkg* pp = (struct filePkg*)package.data;
         if (receveMessage(&package) < 0) {
             break;
         } else {
             pkg_current++;
-            struct filePkg* pp = (struct filePkg*)package.data;
+            // printf("receive package %d\n",pkg_current);
             fwrite(pp->data, sizeof(char), package.length - sizeof(pp->pkg_current), fd);
+            fflush(fd);
         }
         if (pkg_current == pkgCnt) {
             rename(fragFile, destFile);
-            return;
+            break;
         }
     }
+    clearInput();
+    // fflush(stdin);
+   printf("trans mission over\n");
 }

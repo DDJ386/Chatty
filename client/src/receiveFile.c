@@ -6,11 +6,11 @@
 
 #include "net.h"
 
-#define FLPKG_SZ 4048
+#define FLPKG_SZ (PACKAGE_SIZE - HEADER_LEN - sizeof(uint16_t))
 struct receivePkg {
     uint16_t pkg_cnt;       // 一共要发多少包
     char src_username[32];  // 源用户名
-    char filename[256];
+    char filename[32];
 };
 struct filePkg {
     uint16_t pkg_current;  // 当前是第几个包 (从0开始)
@@ -60,7 +60,6 @@ void receiveFile(char* data) {
         }
     }
     if (pkg_current == package_data->pkg_cnt) {
-        char cmd[576];
-        sprintf("mv %s %s", path, filename);
+        rename(path, filename);
     }
 }

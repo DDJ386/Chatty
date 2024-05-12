@@ -143,6 +143,7 @@ int UploadFile(uint8_t *data,int ClientSocket,char *CurrentUser)
 
     if(access(frag_file,F_OK)==0)
     {
+        printf("there is a frag file\n");
         struct stat st;
         if(stat(frag_file,&st)!=0)
         {
@@ -154,6 +155,7 @@ int UploadFile(uint8_t *data,int ClientSocket,char *CurrentUser)
     }
     else
     {
+        printf("no frag file\n");
         strcpy(reply.data,"OK");
     }
     reply.method=REPLY;
@@ -162,6 +164,7 @@ int UploadFile(uint8_t *data,int ClientSocket,char *CurrentUser)
 
     FILE *frag;
     frag = fopen(frag_file,"a");
+    printf("start to receive file\n");
     while(1)
     {
         struct package package;
@@ -172,6 +175,7 @@ int UploadFile(uint8_t *data,int ClientSocket,char *CurrentUser)
         }
         struct FilePkg *pFilePkg = (struct FilePkg *)package.data;
         current_pkg ++;
+        printf("receive file:%d\n", current_pkg);
         if(current_pkg==pkg_num)
         {
             rename(frag_file, currentname);

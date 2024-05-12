@@ -1,13 +1,12 @@
 #include "display.h"
 
+#include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <pthread.h>
 
-static pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER; 
+static pthread_mutex_t printLock = PTHREAD_MUTEX_INITIALIZER;
 
-void positionPrint(struct curPosition position, struct curPosition limit,const char *format, ...) {
-    
+void positionPrint(struct curPosition position, struct curPosition limit, const char *format, ...) {
     uint16_t col = position.col;
     uint16_t row = position.row;
     char buffer[4096];

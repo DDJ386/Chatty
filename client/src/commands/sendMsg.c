@@ -26,7 +26,7 @@ void sendMsg() {
     // send message to server
     struct package package;
     package.method = SDMSG;
-    sprintf(package.data,"%s %s", currentChat, message);
+    sprintf(package.data, "%s %s", currentChat, message);
     netLock();
     sendMessage(&package);
     netUnlock();

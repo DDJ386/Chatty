@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "display.h"
 #include "net.h"
@@ -14,6 +14,6 @@ void logout() {
     sendMessage(&package);
     strcpy(currentUser, "");
     closeConnect();
-    positionPrint(inputZoneStart, inputZoneEnd,"log out\n");
+    positionPrint(inputZoneStart, inputZoneEnd, "log out\n");
     exit(1);
 }

@@ -61,7 +61,7 @@ void printLog() {
                 flag = 1;
                 continue;
             }
-            if(flag == 1 && *it == '\\'){
+            if (flag == 1 && *it == '\\') {
                 *it = '\n';
                 continue;
             }

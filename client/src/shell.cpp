@@ -17,14 +17,8 @@ void logout();
 
 typedef void (*pfunc)();
 
-map<string, pfunc> commands = {
-    {"help", help},
-    {"touch", touch},
-    {"sdmsg", sendMsg},
-    {"sd", sendMsg},
-    {"sdfile", sendFile},
-    {"logout", logout}
-};
+map<string, pfunc> commands = {{"help", help},  {"touch", touch},     {"sdmsg", sendMsg},
+                               {"sd", sendMsg}, {"sdfile", sendFile}, {"logout", logout}};
 
 void shell() {
     while (1) {

@@ -74,7 +74,7 @@ void *receive(void *pvoid) {
     (void)pvoid;
     struct package message;
     while (1) {
-        if (receveMessage(&message) < 0){
+        if (receveMessage(&message) < 0) {
             continue;
         }
         if (message.method == REPLY && message.length != 0) {
@@ -83,8 +83,7 @@ void *receive(void *pvoid) {
             netLock();
             receiveFile(message.data);
             netUnlock();
-        }
-        else if(message.method == REPLY && message.length == 0) {
+        } else if (message.method == REPLY && message.length == 0) {
             startToSend(message.data);
         }
     }

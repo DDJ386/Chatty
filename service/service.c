@@ -6,132 +6,119 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <sys/stat.h>
 
 #include "protocol.h"
 
 #ifndef DEBUG
 #define printf(...)
-#endif 
+#endif
 
 #define PORT 8848
 #define IP "127.0.0.1"
 #define BACKLOG 1024
 #define FLPKG_SZ (DATA_SEZE - sizeof(uint16_t))
 
-int ServerSocket,ClientSocket;
+int ServerSocket, ClientSocket;
 
-int Regis(uint8_t *data)
-{
+int Regis(uint8_t *data) {
     printf("regis func\n");
-    int i=0,sum;
+    int i = 0, sum;
     char username[50];
     char password[50];
     char filename[256];
-    sscanf(data,"%s %s", username, password);
+    sscanf(data, "%s %s", username, password);
     printf("%s\n%s\n", username, password);
     FILE *fd;
-    sprintf(filename,"%s/Chatty/service/user",getenv("HOME"));
+    sprintf(filename, "%s/Chatty/service/user", getenv("HOME"));
     printf("%s\n", filename);
-    fd=fopen(filename,"r+");
+    fd = fopen(filename, "r+");
     char checkUser[32];
-    char checkPsd[32];  
-    while (fscanf(fd, "%s %s", checkUser, checkPsd) != EOF)
-    {
-        if(strcmp(username, checkUser) == 0) {
+    char checkPsd[32];
+    while (fscanf(fd, "%s %s", checkUser, checkPsd) != EOF) {
+        if (strcmp(username, checkUser) == 0) {
             return -1;
         }
     }
-    fseek(fd,0L,SEEK_END);
-    fprintf(fd,"%s %s\n",username,password);
+    fseek(fd, 0L, SEEK_END);
+    fprintf(fd, "%s %s\n", username, password);
     fflush(fd);
     char cmd[256];
-    sprintf(cmd, "mkdir %s/Chatty/service/%s",getenv("HOME"), username);
+    sprintf(cmd, "mkdir %s/Chatty/service/%s", getenv("HOME"), username);
     system(cmd);
-    sprintf(cmd,"mkdir %s/Chatty/service/%s/%s",getenv("HOME"), username,"MessageBox");
+    sprintf(cmd, "mkdir %s/Chatty/service/%s/%s", getenv("HOME"), username, "MessageBox");
     system(cmd);
-    sprintf(cmd,"mkdir %s/Chatty/service/%s/%s",getenv("HOME"), username,"FileBox");
+    sprintf(cmd, "mkdir %s/Chatty/service/%s/%s", getenv("HOME"), username, "FileBox");
     system(cmd);
     return 1;
 }
 
-
-int LoginCheck(u_int8_t *data, char * CurrentUser)
-{
+int LoginCheck(u_int8_t *data, char *CurrentUser) {
     printf("func login\n");
-    char password[32]="";
+    char password[32] = "";
     char filename[256];
-    char User[32]="";
+    char User[32] = "";
 
-    sscanf(data,"%s %s", User, password);
+    sscanf(data, "%s %s", User, password);
     printf("username:%s\npassword:%s\n", User, password);
     FILE *fd;
     snprintf(filename, 256, "%s/Chatty/service/user", getenv("HOME"));
-    fd=fopen(filename,"r+");
+    fd = fopen(filename, "r+");
     char checkUser[32];
     char checkPwd[32];
-    while(fscanf(fd,"%s %s",checkUser,checkPwd)!=EOF)
-    {
+    while (fscanf(fd, "%s %s", checkUser, checkPwd) != EOF) {
         printf("checking username:%s\tpassword:%s\n", checkUser, checkPwd);
-        if(strcmp(User,checkUser)==0)
-        {
+        if (strcmp(User, checkUser) == 0) {
             printf("username matched\n");
-            if(strcmp(password,checkPwd)==0)
-            {
+            if (strcmp(password, checkPwd) == 0) {
                 printf("password matched\n");
-                strcpy(CurrentUser,User);
+                strcpy(CurrentUser, User);
                 return 1;
-            }
-            else return -1;
+            } else
+                return -1;
         }
     }
     return -1;
 }
 
-
-int ReplytoClient(struct package *packet,int ClientSocket)
-{
-    printf("reply to socket:%d\n",ClientSocket);
+int ReplytoClient(struct package *packet, int ClientSocket) {
+    printf("reply to socket:%d\n", ClientSocket);
     send(ClientSocket, (void *)packet, 4096, 0);
     return 0;
 }
 
-int SendMessage(uint8_t *data,char* CurrentUser)
-{
+int SendMessage(uint8_t *data, char *CurrentUser) {
     printf("func SendMessage\n");
-    int i=0;
+    int i = 0;
     char receiver[32];
     char filename[256];
     char message[4064];
-    sscanf(data,"%s %[^\n]%*c",receiver,message);
+    sscanf(data, "%s %[^\n]%*c", receiver, message);
     printf("dest user:%s\nmessage:%s\n", receiver, message);
     FILE *fd;
     snprintf(filename, 256, "%s/Chatty/service/%s/MessageBox", getenv("HOME"), receiver);
     printf("%s\n", filename);
-    fd=fopen(filename,"r+");
+    fd = fopen(filename, "r+");
 
-    if(access(filename,F_OK) == 0)
-    {    
-        snprintf(filename, 256, "%s/Chatty/service/%s/MessageBox/%s", getenv("HOME"), receiver,CurrentUser);
-        fd=fopen(filename,"a");
+    if (access(filename, F_OK) == 0) {
+        snprintf(filename, 256, "%s/Chatty/service/%s/MessageBox/%s", getenv("HOME"), receiver,
+                 CurrentUser);
+        fd = fopen(filename, "a");
         fprintf(fd, "%s\n", message);
         fflush(fd);
         return 1;
-    }
-    else return -1;
+    } else
+        return -1;
 }
 
-
-int UploadFile(uint8_t *data,int ClientSocket,char *CurrentUser)
-{
+int UploadFile(uint8_t *data, int ClientSocket, char *CurrentUser) {
     printf("func UploadFile\n");
     int pkg_num;
     char DestUser[32], Filename[32];
     struct package reply;
-    struct FilePkg 
-    {
+    struct FilePkg {
         uint16_t pkg_current;  // 当前是第几个包 (从0开始)
         char data[FLPKG_SZ];   // 剩余部分全为data
     };
@@ -141,120 +128,106 @@ int UploadFile(uint8_t *data,int ClientSocket,char *CurrentUser)
     int current_pkg = 0;
     char frag_file[256];
     char currentname[256];
-    sprintf(frag_file,"%s/Chatty/service/%s/FileBox/%s/%s.frag",getenv("HOME"),DestUser, CurrentUser, Filename);
-    sprintf(currentname,"%s/Chatty/service/%s/FileBox/%s/%s",getenv("HOME"),DestUser, CurrentUser, Filename);
-    printf("%s\n",frag_file);
+    sprintf(frag_file, "%s/Chatty/service/%s/FileBox/%s/%s.frag", getenv("HOME"), DestUser,
+            CurrentUser, Filename);
+    sprintf(currentname, "%s/Chatty/service/%s/FileBox/%s/%s", getenv("HOME"), DestUser,
+            CurrentUser, Filename);
+    printf("%s\n", frag_file);
 
-    if(access(frag_file,F_OK)==0)
-    {
+    if (access(frag_file, F_OK) == 0) {
         printf("there is a frag file\n");
         struct stat st;
-        if(stat(frag_file,&st)!=0)
-        {
+        if (stat(frag_file, &st) != 0) {
             perror("stat error");
             return -1;
         }
-        current_pkg=st.st_size/FLPKG_SZ;
-        sprintf(reply.data,"%d",current_pkg);
-    }
-    else
-    {
+        current_pkg = st.st_size / FLPKG_SZ;
+        sprintf(reply.data, "%d", current_pkg);
+    } else {
         char path[512];
-        sprintf(path,"%s/Chatty/service/%s/FileBox/%s",getenv("HOME"),DestUser, CurrentUser);
+        sprintf(path, "%s/Chatty/service/%s/FileBox/%s", getenv("HOME"), DestUser, CurrentUser);
         mkdir(path, 777);
         printf("no frag file\n");
-        strcpy(reply.data,"OK");
+        strcpy(reply.data, "OK");
     }
-    reply.method=REPLY;
+    reply.method = REPLY;
     // reply.length=sizeof(reply.data);
     reply.length = 0;
-    ReplytoClient((void*)&reply,ClientSocket);
+    ReplytoClient((void *)&reply, ClientSocket);
 
     FILE *frag;
-    frag = fopen(frag_file,"a");
+    frag = fopen(frag_file, "a");
     printf("start to receive file\n");
-    while(1)
-    {
+    while (1) {
         struct package package;
-        if(recv(ClientSocket,(void*)&package,sizeof(package),MSG_WAITALL) < 0)
-        {
+        if (recv(ClientSocket, (void *)&package, sizeof(package), MSG_WAITALL) < 0) {
             fclose(frag);
             return -1;
         }
-        printf("%d %d\n",package.method, package.length);
+        printf("%d %d\n", package.method, package.length);
         struct FilePkg *pFilePkg = (struct FilePkg *)package.data;
-        current_pkg ++;
+        current_pkg++;
         printf("receive file:%d\n", current_pkg);
-        fwrite(pFilePkg->data, sizeof(char), package.length - sizeof(uint16_t),frag);
+        fwrite(pFilePkg->data, sizeof(char), package.length - sizeof(uint16_t), frag);
         fflush(frag);
-        if(current_pkg==pkg_num)
-        {
+        if (current_pkg == pkg_num) {
             rename(frag_file, currentname);
             fclose(frag);
             return 1;
-        }
-        else
-        {
+        } else {
             // do nothing
         }
     }
 }
 
-int HandleInquiry(char* CurrentUser,int ClientSocket)
-{
+int HandleInquiry(char *CurrentUser, int ClientSocket) {
     printf("func HandleInquiry\n");
-    char buffer[4094]="";
-    char data_buffer[4094] ="";
+    char buffer[4094] = "";
+    char data_buffer[4094] = "";
     FILE *fd;
     char msg_path[256];
     char file_path[256];
     char filename[512];
-    snprintf(msg_path,256,"%s/Chatty/service/%s/MessageBox",getenv("HOME"), CurrentUser);
-    snprintf(file_path,256,"%s/Chatty/service/%s/FileBox",getenv("HOME"),CurrentUser);
-    
-    struct dirent *dp1,*dp2;
-    DIR *dir1=opendir(msg_path);
-    DIR *dir2=opendir(file_path);
-    if(!dir1) return -1;
-    while ((dp1=readdir(dir1))!=NULL)
-    {
-        int cnt=0;
-        if(strcmp(dp1->d_name,".")!=0&&strcmp(dp1->d_name,"..")!=0)
-        {
-            
+    snprintf(msg_path, 256, "%s/Chatty/service/%s/MessageBox", getenv("HOME"), CurrentUser);
+    snprintf(file_path, 256, "%s/Chatty/service/%s/FileBox", getenv("HOME"), CurrentUser);
+
+    struct dirent *dp1, *dp2;
+    DIR *dir1 = opendir(msg_path);
+    DIR *dir2 = opendir(file_path);
+    if (!dir1) return -1;
+    while ((dp1 = readdir(dir1)) != NULL) {
+        int cnt = 0;
+        if (strcmp(dp1->d_name, ".") != 0 && strcmp(dp1->d_name, "..") != 0) {
             //检查文件与缓冲区的大小
-            snprintf(filename, 512,"%s/%s",msg_path,dp1->d_name);
-            fd=fopen(filename,"r+");
+            snprintf(filename, 512, "%s/%s", msg_path, dp1->d_name);
+            fd = fopen(filename, "r+");
             char msg[4064];
-            while(fscanf(fd,"%[^\n]%*c",msg)!=EOF)
-            {
-                if(strlen(msg) + strlen(buffer)  + strlen(data_buffer)> sizeof(data_buffer) - 42)
-                {
-                    
-                    sprintf(data_buffer + strlen(data_buffer), "%s %d%s",dp1->d_name,cnt,buffer);
+            while (fscanf(fd, "%[^\n]%*c", msg) != EOF) {
+                if (strlen(msg) + strlen(buffer) + strlen(data_buffer) > sizeof(data_buffer) - 42) {
+                    sprintf(data_buffer + strlen(data_buffer), "%s %d%s", dp1->d_name, cnt, buffer);
                     struct package reply;
-                    reply.method=REPLY;
-                    memcpy(reply.data,data_buffer, sizeof(data_buffer));
-                    reply.length=strlen(data_buffer);
-                    ReplytoClient((void*)&reply,ClientSocket);
+                    reply.method = REPLY;
+                    memcpy(reply.data, data_buffer, sizeof(data_buffer));
+                    reply.length = strlen(data_buffer);
+                    ReplytoClient((void *)&reply, ClientSocket);
                     memset(data_buffer, 0, sizeof(data_buffer));
                     memset(buffer, 0, sizeof(buffer));
-                    cnt=0;
+                    cnt = 0;
                 }
-                strcat(buffer,msg);
-                strcat(buffer,"\n");
+                strcat(buffer, msg);
+                strcat(buffer, "\n");
                 cnt++;
             }
-            sprintf(data_buffer + strlen(data_buffer), "%s %d%s",dp1->d_name,cnt,buffer);
+            sprintf(data_buffer + strlen(data_buffer), "%s %d%s", dp1->d_name, cnt, buffer);
             struct package reply;
-            reply.method=REPLY;
-            strcpy(reply.data,data_buffer);
-            reply.length=strlen(data_buffer);
-            ReplytoClient((void*)&reply,ClientSocket);
+            reply.method = REPLY;
+            strcpy(reply.data, data_buffer);
+            reply.length = strlen(data_buffer);
+            ReplytoClient((void *)&reply, ClientSocket);
         }
     }
     char cmd[256];
-    snprintf(cmd,256,"rm -r /%s/Chatty/service/%s/MessageBox/*",getenv("HOME"),CurrentUser);
+    snprintf(cmd, 256, "rm -r /%s/Chatty/service/%s/MessageBox/*", getenv("HOME"), CurrentUser);
     system(cmd);
     closedir(dir1);
 
@@ -263,86 +236,80 @@ int HandleInquiry(char* CurrentUser,int ClientSocket)
         char data[FLPKG_SZ];   // 剩余部分全为data
     };
 
-    if(!dir2) return -1;
-    while((dp2=readdir(dir2))!=NULL)
-    {
-        if(strcmp(dp2->d_name,".")==0 || strcmp(dp2->d_name,"..")==0)
-            continue;
+    if (!dir2) return -1;
+    while ((dp2 = readdir(dir2)) != NULL) {
+        if (strcmp(dp2->d_name, ".") == 0 || strcmp(dp2->d_name, "..") == 0) continue;
         struct dirent *dp3;
         char file_name[512];
-        sprintf(file_name,"%s/Chatty/service/%s/FileBox/%s",getenv("HOME"),CurrentUser,dp2->d_name);
-        DIR *dir3=opendir(file_name);
-        if(!dir3) return -1;
-        while ((dp3=readdir(dir3))!=NULL)
-        {
-            if(strcmp(dp3->d_name,".")==0 || strcmp(dp3->d_name,"..")==0)
-                continue;
+        sprintf(file_name, "%s/Chatty/service/%s/FileBox/%s", getenv("HOME"), CurrentUser,
+                dp2->d_name);
+        DIR *dir3 = opendir(file_name);
+        if (!dir3) return -1;
+        while ((dp3 = readdir(dir3)) != NULL) {
+            if (strcmp(dp3->d_name, ".") == 0 || strcmp(dp3->d_name, "..") == 0) continue;
             size_t str_len = strlen(dp3->d_name);
             size_t suffix_len = strlen(".frag");
             if (str_len >= suffix_len && strcmp(dp3->d_name + str_len - suffix_len, ".frag") == 0)
                 continue;
-        
-            printf("start to download in dirs %s\n",file_name);
+
+            printf("start to download in dirs %s\n", file_name);
             FILE *fd;
             char path[512];
-            snprintf(path,512,"%s/Chatty/service/%s/FileBox/%s/%s",getenv("HOME"),CurrentUser,dp2->d_name,dp3->d_name);
+            snprintf(path, 512, "%s/Chatty/service/%s/FileBox/%s/%s", getenv("HOME"), CurrentUser,
+                     dp2->d_name, dp3->d_name);
             struct stat st;
-            if(stat(path,&st) != 0) return -1;
-            int pkg_num= (st.st_size-1)/FLPKG_SZ+1;
+            if (stat(path, &st) != 0) return -1;
+            int pkg_num = (st.st_size - 1) / FLPKG_SZ + 1;
             struct package reply;
-            sprintf(reply.data,"%d%s %s",pkg_num,dp2->d_name,dp3->d_name);
-            reply.method=SDFLE;
-            reply.length=sizeof(reply.data);
-            ReplytoClient((void*)&reply,ClientSocket);
+            sprintf(reply.data, "%d%s %s", pkg_num, dp2->d_name, dp3->d_name);
+            reply.method = SDFLE;
+            reply.length = sizeof(reply.data);
+            ReplytoClient((void *)&reply, ClientSocket);
 
             struct package bufferpkg;
-            if(recv(ClientSocket,(void*)&bufferpkg,sizeof(bufferpkg),MSG_WAITALL) < 0){
+            if (recv(ClientSocket, (void *)&bufferpkg, sizeof(bufferpkg), MSG_WAITALL) < 0) {
                 return -1;
             }
             int start = 0;
-            if(bufferpkg.method==REPLY&&strcmp(bufferpkg.data,"OK")==0){
-            }
-            else{
-                sscanf(bufferpkg.data,"%d",&start);
+            if (bufferpkg.method == REPLY && strcmp(bufferpkg.data, "OK") == 0) {
+            } else {
+                sscanf(bufferpkg.data, "%d", &start);
             }
             int offset = start * FLPKG_SZ;
-            fd=fopen(path,"r");
+            fd = fopen(path, "r");
             fseek(fd, offset, SEEK_SET);
-            for(int i = start + 1; i <= pkg_num; i++)
-            {
-                
+            for (int i = start + 1; i <= pkg_num; i++) {
                 struct FilePkg *fp = (struct FilePkg *)(reply.data);
-                if(i == pkg_num)
+                if (i == pkg_num)
                     reply.length = (st.st_size % FLPKG_SZ) + sizeof(fp->pkg_current);
-                else 
+                else
                     reply.length = PACKAGE_SIZE - HEADER_LEN;
-                reply.method=SDFLE;
+                reply.method = SDFLE;
                 fp->pkg_current = i;
                 fread(fp->data, sizeof(char), reply.length - sizeof(fp->pkg_current), fd);
                 printf("start to transmit package %d length %d\n", fp->pkg_current, reply.length);
-                ReplytoClient((void*)&reply,ClientSocket);
-            }           
-            fclose(fd); 
+                ReplytoClient((void *)&reply, ClientSocket);
+            }
+            fclose(fd);
         }
         closedir(dir3);
     }
-    snprintf(cmd,256,"rm -r /%s/Chatty/service/%s/FileBox/*",getenv("HOME"),CurrentUser);
+    snprintf(cmd, 256, "rm -r /%s/Chatty/service/%s/FileBox/*", getenv("HOME"), CurrentUser);
     system(cmd);
     closedir(dir2);
     return 1;
 }
 
-void* HandleClient(void* arg)
-{
-    char CurrentUser[32]="";
-    char Filename[32]="";
-    int ClientSocket = *(int*)arg;
+void *HandleClient(void *arg) {
+    char CurrentUser[32] = "";
+    char Filename[32] = "";
+    int ClientSocket = *(int *)arg;
     free(arg);
-    struct package buffer,reply;
-    int rcv=-1;
-    int is_first=1;
-    int pkg_cnt=0;
-    u_int16_t meth,len;
+    struct package buffer, reply;
+    int rcv = -1;
+    int is_first = 1;
+    int pkg_cnt = 0;
+    u_int16_t meth, len;
     u_int8_t data[4064];
     while (1) {
         usleep(1000);
@@ -358,7 +325,7 @@ void* HandleClient(void* arg)
         len = buffer.length;
         if (meth) printf("receive package %d from socket:%d\n", meth, ClientSocket);
         strcpy(data, buffer.data);
-        
+
         switch (meth) {
             case REGIS: {
                 if (Regis(data) == -1) {
@@ -367,7 +334,7 @@ void* HandleClient(void* arg)
                     printf("regis success\n");
                     strcpy(reply.data, "success");
                 }
-               ReplytoClient((void *)&reply,ClientSocket);
+                ReplytoClient((void *)&reply, ClientSocket);
                 close(ClientSocket);
                 return NULL;
             }
@@ -379,7 +346,7 @@ void* HandleClient(void* arg)
                     strcpy(reply.data, "success");
                 }
                 reply.length = strlen(reply.data);
-                ReplytoClient((void *)&reply,ClientSocket);
+                ReplytoClient((void *)&reply, ClientSocket);
                 break;
             }
             case SDMSG: {
@@ -392,13 +359,11 @@ void* HandleClient(void* arg)
                 // ReplytoClient((void *)&reply,ClientSocket);
                 break;
             }
-            case SDFLE:
-            {   
-                UploadFile(data,ClientSocket,CurrentUser);
+            case SDFLE: {
+                UploadFile(data, ClientSocket, CurrentUser);
                 break;
             }
-            case INQRY:
-            {
+            case INQRY: {
                 HandleInquiry(CurrentUser, ClientSocket);
                 break;
             }
@@ -413,8 +378,8 @@ int main() {
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_addr_len = sizeof(client_addr);
     system("touch user");
-    int ServerSocket,ClientSocket;
-    ServerSocket=socket(AF_INET,SOCK_STREAM,0);
+    int ServerSocket, ClientSocket;
+    ServerSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (ServerSocket == -1) {
         perror("Failed to create socket");
         return -1;
@@ -443,7 +408,7 @@ int main() {
             continue;
         }
         struct timeval timeout;
-        timeout.tv_sec = 10; // 设置超时时间为 10 秒
+        timeout.tv_sec = 10;  // 设置超时时间为 10 秒
         timeout.tv_usec = 0;
 
         if (setsockopt(ClientSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
@@ -451,9 +416,9 @@ int main() {
             exit(EXIT_FAILURE);
         }
         pthread_t thread;
-        int *para = (int*)malloc(sizeof(int));
+        int *para = (int *)malloc(sizeof(int));
         *para = ClientSocket;
-        if(pthread_create(&thread, NULL, HandleClient, (void*)para) != 0) {
+        if (pthread_create(&thread, NULL, HandleClient, (void *)para) != 0) {
             perror("Failed to create thread");
             close(ClientSocket);
         }

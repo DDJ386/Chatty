@@ -28,13 +28,11 @@ void sendFile() {
     scanf(" %s", filename);
     sprintf(path, "%s/Chatty/client/user/%s/file/%s", getenv("HOME"), currentUser, filename);
 
-    
     fd = fopen(path, "r");
     if (fd == NULL) {
         positionPrint(inputZoneStart, inputZoneEnd, "%s does not exist\n", path);
     }
 
-    
     if (stat(path, &st) != 0) {
         perror("stat error");
         return;
@@ -42,7 +40,7 @@ void sendFile() {
 
     // send first package
     clearInput();
-    positionPrint(inputZoneStart, inputZoneEnd,"sending file %s to %s",filename, currentChat);
+    positionPrint(inputZoneStart, inputZoneEnd, "sending file %s to %s", filename, currentChat);
     struct package package;
     package.method = SDFLE;
     pkg_num = (st.st_size - 1) / FLPKG_SZ + 1;
@@ -52,7 +50,7 @@ void sendFile() {
     netUnlock();
 }
 
-void startToSend(char* data) {
+void startToSend(char *data) {
     // send file
     int start = 0;
     if (strcmp(data, "OK") == 0) {
@@ -79,6 +77,6 @@ void startToSend(char* data) {
     netUnlock();
     fclose(fd);
     clearInput();
-    // fflush(stdin);   
+    // fflush(stdin);
     printf("trans mission over\n");
 }

@@ -1,8 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
-#include <stdlib.h>
 
 #include "display.h"
 #include "net.h"
@@ -50,7 +50,7 @@ again:
     sendMessage(&message);
 
     // receive message
-    if(receveMessage((void *)&message) < 0){
+    if (receveMessage((void *)&message) < 0) {
         printf("connect timeout\n");
     }
     if (message.method != REPLY || strcmp(message.data, "success")) {

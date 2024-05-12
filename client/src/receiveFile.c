@@ -4,8 +4,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "net.h"
 #include "display.h"
+#include "net.h"
 
 #define FLPKG_SZ (PACKAGE_SIZE - HEADER_LEN - sizeof(uint16_t))
 
@@ -47,7 +47,8 @@ void receiveFile(char* data) {
     sendMessage(&package);
 
     clearInput();
-    positionPrint(inputZoneStart, inputZoneEnd, "receiving file: %s from %s please wait\n", fileName, srcUsername);
+    positionPrint(inputZoneStart, inputZoneEnd, "receiving file: %s from %s please wait\n",
+                  fileName, srcUsername);
 
     FILE* fd = fopen(fragFile, "a");
     while (1) {
@@ -67,5 +68,5 @@ void receiveFile(char* data) {
     }
     clearInput();
     // fflush(stdin);
-   printf("trans mission over\n");
+    printf("trans mission over\n");
 }

@@ -37,7 +37,7 @@ void login() {
     sendMessage(&message);
 
     // receive message
-    if(receveMessage((void *)&message) < 0){
+    if (receveMessage((void *)&message) < 0) {
         printf("connect timeout\n");
     }
     if (message.method != REPLY || strcmp(message.data, "success")) {

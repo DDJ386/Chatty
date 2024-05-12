@@ -8,7 +8,7 @@ extern void init();
 extern void shell();
 extern void* inquire(void* pvoid);
 extern void* fresh(void* pvoid);
-extern void *receive(void *pvoid);
+extern void* receive(void* pvoid);
 
 struct curPosition screenSize;
 uint16_t vPartLine, hPartLine;

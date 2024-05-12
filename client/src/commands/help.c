@@ -5,7 +5,7 @@ char manual[] = "login\nsignin\n ";
 extern struct curPosition screenSize;
 extern struct curPosition displayZoneStart, displayZoneEnd;
 
-void help() { 
+void help() {
     clear(displayZoneStart, displayZoneEnd);
-    positionPrint(displayZoneStart, displayZoneEnd, "%s", manual); 
-    }
+    positionPrint(displayZoneStart, displayZoneEnd, "%s", manual);
+}

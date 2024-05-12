@@ -22,7 +22,7 @@ void sendFile() {
     char filename[50];
     char path[256];
     scanf(" %s", filename);
-    sprintf(path, "%s/Chatty/client/user/%s/file/%s", getenv("HOME"), currentChat, filename);
+    sprintf(path, "%s/Chatty/client/user/%s/file/%s", getenv("HOME"), currentUser, filename);
 
     FILE *fd;
     fd = fopen(path, "r");
@@ -39,7 +39,7 @@ void sendFile() {
     // send first package
     struct package package;
     int pkg_num = (st.st_size - 1) / FLPKG_SZ + 1;
-    sprintf(package.data, "%d%s %s", pkg_num, currentUser, filename);
+    sprintf(package.data, "%d%s %s", pkg_num, currentChat, filename);
     netLock();
     sendMessage(&package);
     receveMessage(&package);

@@ -54,10 +54,16 @@ void printLog() {
     for (int i = 0; i < size; i++) {
         line = toDisplay.front();
         toDisplay.pop();
+        int flag = 0;
         for (auto it = line.begin(); it != line.end(); it++) {
-            if ((*it) == ' ') {
+            if (flag == 0 && *it == ' ') {
                 *it = '\n';
-                break;
+                flag = 1;
+                continue;
+            }
+            if(flag == 1 && *it == '\\'){
+                *it = '\n';
+                continue;
             }
         }
         positionPrint(start, displayZoneEnd, "%s\n", line.c_str());

@@ -68,5 +68,5 @@ void receiveFile(char* data) {
     }
     clearInput();
     // fflush(stdin);
-    printf("trans mission over\n");
+    printf("transmission %s over\n", fileName);
 }

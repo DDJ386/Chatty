@@ -2,6 +2,7 @@
 #include <dirent.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,6 +23,11 @@
 #define FLPKG_SZ (DATA_SEZE - sizeof(uint16_t))
 
 int ServerSocket, ClientSocket;
+
+void sigpipe_handler(int signum) {
+    // 处理 SIGPIPE 信号
+    fprintf(stderr, "Caught SIGPIPE\n");
+}
 
 int Regis(uint8_t *data) {
     printf("regis func\n");
@@ -197,38 +203,41 @@ int HandleInquiry(char *CurrentUser, int ClientSocket) {
     if (!dir1) return -1;
     while ((dp1 = readdir(dir1)) != NULL) {
         int cnt = 0;
-        if (strcmp(dp1->d_name, ".") != 0 && strcmp(dp1->d_name, "..") != 0) {
-            //检查文件与缓冲区的大小
-            snprintf(filename, 512, "%s/%s", msg_path, dp1->d_name);
-            fd = fopen(filename, "r+");
-            char msg[4064];
-            while (fscanf(fd, "%[^\n]%*c", msg) != EOF) {
-                if (strlen(msg) + strlen(buffer) + strlen(data_buffer) > sizeof(data_buffer) - 42) {
-                    sprintf(data_buffer + strlen(data_buffer), "%s %d%s", dp1->d_name, cnt, buffer);
-                    struct package reply;
-                    reply.method = REPLY;
-                    memcpy(reply.data, data_buffer, sizeof(data_buffer));
-                    reply.length = strlen(data_buffer);
-                    ReplytoClient((void *)&reply, ClientSocket);
-                    memset(data_buffer, 0, sizeof(data_buffer));
-                    memset(buffer, 0, sizeof(buffer));
-                    cnt = 0;
-                }
-                strcat(buffer, msg);
-                strcat(buffer, "\n");
-                cnt++;
+        if (strcmp(dp1->d_name, ".") == 0 || strcmp(dp1->d_name, "..") == 0) continue;
+        // 检查文件与缓冲区的大小
+        snprintf(filename, 512, "%s/%s", msg_path, dp1->d_name);
+        fd = fopen(filename, "r+");
+        char msg[4064];
+        while (fscanf(fd, "%[^\n]%*c", msg) != EOF) {
+            if (strlen(msg) + strlen(buffer) + strlen(data_buffer) > sizeof(data_buffer) - 42) {
+                sprintf(data_buffer + strlen(data_buffer), "%s %d%s", dp1->d_name, cnt, buffer);
+                struct package reply;
+                reply.method = REPLY;
+                memcpy(reply.data, data_buffer, sizeof(data_buffer));
+                reply.length = strlen(data_buffer);
+                ReplytoClient((void *)&reply, ClientSocket);
+                memset(data_buffer, 0, sizeof(data_buffer));
+                memset(buffer, 0, sizeof(buffer));
+                cnt = 0;
             }
-            sprintf(data_buffer + strlen(data_buffer), "%s %d%s", dp1->d_name, cnt, buffer);
-            struct package reply;
-            reply.method = REPLY;
-            strcpy(reply.data, data_buffer);
-            reply.length = strlen(data_buffer);
-            ReplytoClient((void *)&reply, ClientSocket);
+            strcat(buffer, msg);
+            strcat(buffer, "\n");
+            cnt++;
         }
+        sprintf(data_buffer + strlen(data_buffer), "%s %d%s", dp1->d_name, cnt, buffer);
+        struct package reply;
+        reply.method = REPLY;
+        strcpy(reply.data, data_buffer);
+        reply.length = strlen(data_buffer);
+        ReplytoClient((void *)&reply, ClientSocket);
+        memset(data_buffer, 0, sizeof(data_buffer));
+        memset(buffer, 0, sizeof(buffer));
+        fclose(fd);
+        remove(filename);
     }
-    char cmd[256];
-    snprintf(cmd, 256, "rm -r /%s/Chatty/service/%s/MessageBox/*", getenv("HOME"), CurrentUser);
-    system(cmd);
+    // char cmd[256];
+    // snprintf(cmd, 256, "rm -r /%s/Chatty/service/%s/MessageBox/*", getenv("HOME"), CurrentUser);
+    // system(cmd);
     closedir(dir1);
 
     struct FilePkg {
@@ -291,11 +300,13 @@ int HandleInquiry(char *CurrentUser, int ClientSocket) {
                 ReplytoClient((void *)&reply, ClientSocket);
             }
             fclose(fd);
+            remove(path);
         }
+        remove(file_name);
         closedir(dir3);
     }
-    snprintf(cmd, 256, "rm -r /%s/Chatty/service/%s/FileBox/*", getenv("HOME"), CurrentUser);
-    system(cmd);
+    // snprintf(cmd, 256, "rm -r /%s/Chatty/service/%s/FileBox/*", getenv("HOME"), CurrentUser);
+    // system(cmd);
     closedir(dir2);
     return 1;
 }
@@ -367,6 +378,11 @@ void *HandleClient(void *arg) {
                 HandleInquiry(CurrentUser, ClientSocket);
                 break;
             }
+            case LOGOUT: {
+                printf("logout\n");
+                close(ClientSocket);
+                return NULL;
+            }
             default: {
                 break;
             }
@@ -378,6 +394,7 @@ int main() {
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_addr_len = sizeof(client_addr);
     system("touch user");
+    signal(SIGPIPE, sigpipe_handler);
     int ServerSocket, ClientSocket;
     ServerSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (ServerSocket == -1) {

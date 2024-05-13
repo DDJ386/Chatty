@@ -78,5 +78,5 @@ void startToSend(char *data) {
     fclose(fd);
     clearInput();
     // fflush(stdin);
-    printf("trans mission over\n");
+    printf("transmission over\n");
 }
